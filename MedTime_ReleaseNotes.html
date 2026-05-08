@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MedTime — Release Notes & Roadmap</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0d1117;
+  --surface: #161b22;
+  --surface2: #1e2530;
+  --border: #30363d;
+  --text: #e6edf3;
+  --muted: #7d8590;
+  --dim: #484f58;
+  --green: #3fb950;
+  --green-dim: rgba(63,185,80,0.1);
+  --red: #f85149;
+  --amber: #d29922;
+  --amber-dim: rgba(210,153,34,0.12);
+  --blue: #58a6ff;
+  --blue-dim: rgba(88,166,255,0.1);
+  --pink: #f778ba;
+  --pink-dim: rgba(247,120,186,0.1);
+  --purple: #bc8cff;
+  --teal: #39d353;
+  --font-head: 'DM Serif Display', serif;
+  --font-body: 'DM Sans', sans-serif;
+  --radius: 10px;
+}
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Grain */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events: none; z-index: 0; opacity: 0.35;
+}
+
+.page {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 0 16px 60px;
+  position: relative;
+  z-index: 1;
+}
+
+/* ── HEADER ── */
+.site-header {
+  padding: 32px 0 24px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 28px;
+}
+
+.header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.pill-logo {
+  display: inline-flex;
+  align-items: stretch;
+  border-radius: 999px;
+  overflow: hidden;
+  height: 34px;
+  font-family: var(--font-head);
+  font-size: 1rem;
+}
+.pill-l { padding: 0 13px 0 16px; background:#fff; color:#0d1117; display:flex; align-items:center; }
+.pill-r { padding: 0 16px 0 13px; background:#0d1117; color:#fff; display:flex; align-items:center; border-left:2px solid #30363d; }
+
+.version-chip {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  background: var(--green-dim);
+  color: var(--green);
+  border: 1px solid rgba(63,185,80,0.25);
+  border-radius: 20px;
+  padding: 4px 10px;
+}
+
+.site-title {
+  font-family: var(--font-head);
+  font-size: 1.8rem;
+  color: var(--text);
+  line-height: 1.1;
+  margin-bottom: 5px;
+}
+.site-sub {
+  font-size: 0.85rem;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+/* ── NAV TABS ── */
+.tab-bar {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 24px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding-bottom: 2px;
+}
+.tab-bar::-webkit-scrollbar { display: none; }
+
+.tab-btn {
+  flex-shrink: 0;
+  padding: 7px 14px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.tab-btn.active {
+  background: var(--blue);
+  border-color: var(--blue);
+  color: #fff;
+}
+.tab-btn:hover:not(.active) { border-color: var(--blue); color: var(--text); }
+
+/* ── SECTIONS ── */
+.section { display: none; }
+.section.active { display: block; }
+
+/* ── RELEASE CARDS ── */
+.release-card {
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-bottom: 14px;
+  border: 1px solid var(--border);
+}
+
+.release-header {
+  padding: 13px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.release-header:active { opacity: 0.85; }
+
+.release-ver {
+  font-family: var(--font-head);
+  font-size: 1.1rem;
+  color: #fff;
+  min-width: 56px;
+}
+.release-badge {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: rgba(255,255,255,0.18);
+  color: #fff;
+}
+.release-date {
+  font-size: 0.75rem;
+  color: rgba(255,255,255,0.65);
+  margin-left: auto;
+}
+.release-chevron {
+  font-size: 0.7rem;
+  color: rgba(255,255,255,0.5);
+  transition: transform 0.25s;
+  margin-left: 4px;
+}
+.release-card.open .release-chevron { transform: rotate(180deg); }
+
+.release-body {
+  display: none;
+  padding: 14px 16px;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+}
+.release-card.open .release-body { display: block; }
+
+.release-group-label {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--dim);
+  margin: 12px 0 6px;
+}
+.release-group-label:first-child { margin-top: 0; }
+
+.release-items { display: flex; flex-direction: column; gap: 5px; }
+.release-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 0.88rem;
+  color: var(--muted);
+  line-height: 1.45;
+}
+.release-item::before {
+  content: '·';
+  color: var(--dim);
+  font-weight: 700;
+  flex-shrink: 0;
+  margin-top: 0px;
+}
+
+/* header colours */
+.hdr-green  { background: #2ea043; }
+.hdr-blue   { background: #1f6feb; }
+.hdr-muted  { background: #30363d; }
+.hdr-amber  { background: #9e6a03; }
+
+/* current release highlight */
+.release-card.current { border-color: var(--green); }
+.release-card.current .release-header { position: relative; }
+.release-card.current .release-header::after {
+  content: 'CURRENT';
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--green);
+  border: 1px solid var(--green);
+  border-radius: 3px;
+  padding: 1px 5px;
+  margin-left: 6px;
+}
+
+/* ── ROADMAP ── */
+.roadmap-group-header {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  padding: 8px 12px;
+  border-radius: 6px;
+  margin: 16px 0 8px;
+}
+
+.roadmap-item {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 8px;
+  overflow: hidden;
+}
+
+.roadmap-item-header {
+  padding: 12px 14px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.roadmap-item-header:active { background: var(--surface2); }
+
+.r-id {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--dim);
+  min-width: 30px;
+  padding-top: 2px;
+  flex-shrink: 0;
+}
+.r-title { font-size: 0.9rem; font-weight: 600; color: var(--text); flex: 1; line-height: 1.3; }
+.r-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
+.r-target {
+  font-size: 0.65rem;
+  color: var(--dim);
+  font-weight: 500;
+  white-space: nowrap;
+}
+.r-status {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+.s-inscope  { background: rgba(63,185,80,0.12);  color: var(--green); }
+.s-planned  { background: rgba(88,166,255,0.12); color: var(--blue); }
+.s-stretch  { background: rgba(210,153,34,0.15); color: var(--amber); }
+.s-released { background: rgba(56,139,253,0.12); color: #388bfd; }
+.s-future   { background: rgba(247,120,186,0.12); color: var(--pink); }
+
+.roadmap-item-body {
+  display: none;
+  padding: 0 14px 14px;
+  border-top: 1px solid var(--border);
+  margin-top: 0;
+}
+.roadmap-item.open .roadmap-item-body { display: block; }
+.roadmap-item.open .roadmap-item-header { background: var(--surface2); }
+
+.r-section { margin-top: 12px; }
+.r-section-label {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--dim);
+  margin-bottom: 5px;
+}
+.r-plain { font-size: 0.88rem; color: var(--muted); line-height: 1.55; }
+.r-tech  { font-size: 0.82rem; color: var(--dim); line-height: 1.5; font-family: 'DM Sans', sans-serif; }
+.r-why   { font-size: 0.85rem; color: var(--muted); line-height: 1.5; }
+.r-notes {
+  font-size: 0.8rem;
+  color: var(--amber);
+  line-height: 1.45;
+  padding: 8px 10px;
+  background: var(--amber-dim);
+  border-radius: 6px;
+  border-left: 2px solid var(--amber);
+  margin-top: 5px;
+}
+
+/* roadmap group headers */
+.g-arch    { background: rgba(188,140,255,0.1); color: var(--purple); }
+.g-sync    { background: rgba(88,166,255,0.1);  color: var(--blue); }
+.g-notif   { background: rgba(210,153,34,0.12); color: var(--amber); }
+.g-ux      { background: rgba(63,185,80,0.1);   color: var(--green); }
+.g-feature { background: rgba(57,211,83,0.1);   color: var(--teal); }
+.g-future  { background: rgba(247,120,186,0.12); color: var(--pink); }
+
+/* ── VERSION TABLE ── */
+.ver-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+.ver-table th {
+  text-align: left;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--dim);
+  padding: 8px 10px;
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+}
+.ver-table td {
+  padding: 9px 10px;
+  border-bottom: 1px solid var(--border);
+  color: var(--muted);
+  vertical-align: top;
+}
+.ver-table tr:last-child td { border-bottom: none; }
+.ver-table tr.cur td { background: rgba(63,185,80,0.05); color: var(--text); }
+.ver-table tr.plan td { color: var(--dim); }
+.ver-table tr.future-row td { background: rgba(247,120,186,0.04); color: var(--dim); }
+.ver-ver { font-weight: 700; color: var(--text); white-space: nowrap; }
+.ver-items { color: #388bfd; font-weight: 600; }
+.ver-table tr.cur .ver-ver { color: var(--green); }
+
+/* ── FOOTER ── */
+.site-footer {
+  margin-top: 40px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+  font-size: 0.72rem;
+  color: var(--dim);
+  text-align: center;
+  line-height: 1.6;
+}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp {
+  from { opacity:0; transform:translateY(10px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+.section.active { animation: fadeUp 0.3s ease both; }
+
+/* ── UTILS ── */
+.released-tag {
+  display: inline-block;
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: #388bfd;
+  border: 1px solid rgba(56,139,253,0.3);
+  border-radius: 3px;
+  padding: 1px 5px;
+  margin-left: 6px;
+  vertical-align: middle;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- HEADER -->
+  <header class="site-header">
+    <div class="header-top">
+      <div class="pill-logo">
+        <div class="pill-l">Med</div>
+        <div class="pill-r">Time</div>
+      </div>
+      <div class="version-chip">v1.5.3</div>
+    </div>
+    <div class="site-title">Release Notes<br>&amp; Roadmap</div>
+    <div class="site-sub" style="margin-top:6px">What's changed, what's planned, and where we're headed.</div>
+  </header>
+
+  <!-- TAB BAR -->
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="showTab('releases')">Release Notes</button>
+    <button class="tab-btn" onclick="showTab('roadmap')">Roadmap</button>
+    <button class="tab-btn" onclick="showTab('history')">Version History</button>
+  </div>
+
+  <!-- ══════════════════════════════════
+       TAB 1 — RELEASE NOTES
+  ══════════════════════════════════ -->
+  <div class="section active" id="tab-releases">
+
+    <!-- v1.5.3 -->
+    <div class="release-card current open">
+      <div class="release-header hdr-green" onclick="toggleCard(this)">
+        <div class="release-ver">v1.5.3</div>
+        <div class="release-badge">Fix</div>
+        <div class="release-date">Latest</div>
+        <div class="release-chevron">▾</div>
+      </div>
+      <div class="release-body">
+        <div class="release-group-label">Fixed</div>
+        <div class="release-items">
+          <div class="release-item">In-app changelog added to the burger menu — tap "What's New" to read it</div>
+          <div class="release-item">R-13 Advanced Mode and R-14 eScript Scan added to the product roadmap</div>
+          <div class="release-item">Version label in Info section corrected</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- v1.5.2 -->
+    <div class="release-card">
+      <div class="release-header hdr-blue" onclick="toggleCard(this)">
+        <div class="release-ver">v1.5.2</div>
+        <div class="release-badge">New</div>
+        <div class="release-date">Session 6</div>
+        <div class="release-chevron">▾</div>
+      </div>
+      <div class="release-body">
+        <div class="release-group-label">What's new</div>
+        <div class="release-items">
+          <div class="release-item">Ambient glow radiates outward from the orb edge into the background</div>
+          <div class="release-item">Glow colour matches status — green when taken, amber when taken early, red when the dose is due soon</div>
+          <div class="release-item">Glow fades out when you're well ahead of the next dose — only appears when meaningful</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- v1.5.1 -->
+    <div class="release-card">
+      <div class="release-header hdr-blue" onclick="toggleCard(this)">
+        <div class="release-ver">v1.5.1</div>
+        <div class="release-badge">New</div>
+        <div class="release-date">Session 6</div>
+        <div class="release-chevron">▾</div>
+      </div>
+      <div class="release-body">
+        <div class="release-group-label">What's new</div>
+        <div class="release-items">
+          <div class="release-item">Orb, ring, and pill logo all glow amber when medication was taken early</div>
+          <div class="release-item">Pulsing dot, countdown numerals, and separators all switch to amber in early state</div>
+        </div>
+        <div class="release-group-label">Fixed</div>
+        <div class="release-items">
+          <div class="release-item">Countdown blocks (hrs / min / sec) no longer clipped by the circle edge</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- v1.5 -->
+    <div class="release-card">
+      <div class="release-header hdr-blue" onclick="toggleCard(this)">
+        <div class="release-ver">v1.5</div>
+        <div class="release-badge">New</div>
+        <div class="release-date">Session 6</div>
+        <div class="release-chevron">▾</div>
+      </div>
+      <div class="release-body">
+        <div class="release-group-label">What's new</div>
+        <div class="release-items">
+          <div class="release-item">Taking medication early now shows a prompt explaining how early you are, rather than blocking you outright</div>
+          <div class="release-item">Optional note field so you can record why you're taking it early (e.g. "Going out this evening")</div>
+          <div class="release-item">History shows early doses with a ⚠ amber badge and your reason if one was given</div>
+        </div>
+        <div class="release-group-label">Fixed</div>
+        <div class="release-items">
+          <div class="release-item">Countdown digits no longer cut off at the top and sides of the circle</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- v1.4.1 -->
+    <div class="release-card">
+      <div class="release-header hdr-muted" onclick="toggleCard(this)">
+        <div class="release-ver">v1.4.1</div>
+        <div class="release-badge">Fix</div>
+        <div class="release-date">Session 5</div>
+        <div class="release-chevron">▾</div>
+      </div>
+      <div class="release-body">
+        <div class="release-group-label">Fixed</div>
+        <div class="release-items">
+          <div class="release-item">Undo banner now uses the same swipe-to-dismiss system as the taken banner — both are now identical</div>
+          <div class="release-item">Swiping either banner no longer accidentally scrolls the page behind it</div>
+          <div class="release-item">Both banners show a 6-second progress bar and auto-dismiss — no tap required</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- v1.4 -->
+    <div class="release-card">
+      <div class="release-header hdr-blue" onclick="toggleCard(this)">
+        <div class="release-ver">v1.4</div>
+        <div class="release-badge">New</div>
+        <div class="release-date">Session 5</div>
+        <div class="release-chevron">▾</div>
+      </div>
+      <div class="release-body">
+        <div class="release-group-label">What's new</div>
+        <div class="release-items">
+          <div class="release-item">Burger menu (☰) in the top-right — quick access to settings, theme, and info</div>
+          <div class="release-item">Light and dark theme toggle, saved between sessions</div>
+          <div class="release-item">Green confirmation banner slides down when medication is marked as taken</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- v1.3 -->
+    <div class="release-card">
+      <div class="release-header hdr-muted" onclick="toggleCard(this)">
+        <div class="release-ver">v1.3</div>
+        <div class="release-badge">Fix</div>
+        <div class="release-date">Session 4</div>
+        <div class="release-chevron">▾</div>
+      </div>
+      <div class="release-body">
+        <div class="release-group-label">Fixed</div>
+        <div class="release-items">
+          <div class="release-item">Countdown now reads "Next dose due in" — clearer wording, Due makes the intent obvious</div>
+          <div class="release-item">Progress ring made thicker (4px → 10px) and easier to see at a glance</div>
+          <div class="release-item">Clock and countdown text made larger throughout the orb</div>
+          <div class="release-item">Versioning, release notes, and roadmap system established from this point</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- v1.2 -->
+    <div class="release-card">
+      <div class="release-header hdr-blue" onclick="toggleCard(this)">
+        <div class="release-ver">v1.2</div>
+        <div class="release-badge">New</div>
+        <div class="release-date">Session 3</div>
+        <div class="release-chevron">▾</div>
+      </div>
+      <div class="release-body">
+        <div class="release-group-label">What's new</div>
+        <div class="release-items">
+          <div class="release-item">Circular orb design — all status info centred inside a glowing circle</div>
+          <div class="release-item">Progress ring around the orb fills up as you approach dose time</div>
+          <div class="release-item">Pill logo animates colour based on status</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- v1.1 -->
+    <div class="release-card">
+      <div class="release-header hdr-blue" onclick="toggleCard(this)">
+        <div class="release-ver">v1.1</div>
+        <div class="release-badge">New</div>
+        <div class="release-date">Session 2</div>
+        <div class="release-chevron">▾</div>
+      </div>
+      <div class="release-body">
+        <div class="release-group-label">What's new</div>
+        <div class="release-items">
+          <div class="release-item">MedTime pill logo in the header — changes colour with your medication status</div>
+          <div class="release-item">Edit button moved next to the medication list heading — more intuitive placement</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- v1.0 -->
+    <div class="release-card">
+      <div class="release-header hdr-green" onclick="toggleCard(this)">
+        <div class="release-ver">v1.0</div>
+        <div class="release-badge">Launch</div>
+        <div class="release-date">Session 1</div>
+        <div class="release-chevron">▾</div>
+      </div>
+      <div class="release-body">
+        <div class="release-group-label">What's new</div>
+        <div class="release-items">
+          <div class="release-item">Live countdown to your next scheduled dose</div>
+          <div class="release-item">Mark medication as taken — card turns green; undo if pressed by mistake</div>
+          <div class="release-item">Medication list with name, dosage, and notes</div>
+          <div class="release-item">Daily history log with exact timestamps</div>
+          <div class="release-item">Settings: reminder time, medications, app icon</div>
+          <div class="release-item">Browser notification support</div>
+          <div class="release-item">Daily auto-reset at midnight; previous day archived to history</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ══════════════════════════════════
+       TAB 2 — ROADMAP
+  ══════════════════════════════════ -->
+  <div class="section" id="tab-roadmap">
+
+    <p style="font-size:0.85rem;color:var(--muted);margin-bottom:16px;line-height:1.5">
+      Each item has a permanent reference code (R-01 etc.) Tap any item to read the full detail. Items stay in the list permanently — released items show which version they shipped in.
+    </p>
+
+    <!-- ARCHITECTURE -->
+    <div class="roadmap-group-header g-arch">Architecture & Foundation</div>
+
+    <div class="roadmap-item">
+      <div class="roadmap-item-header" onclick="toggleRoadmap(this)">
+        <div class="r-id">R-01</div>
+        <div class="r-title">Convert to PWA</div>
+        <div class="r-right"><div class="r-target">v2.0</div><div class="r-status s-inscope">In Scope</div></div>
+      </div>
+      <div class="roadmap-item-body">
+        <div class="r-section"><div class="r-section-label">Plain English</div><div class="r-plain">Turns MedTime into a properly installed app on your phone — with a real icon, splash screen, and reliable background behaviour. Everything else in v2.0 depends on this being in place first.</div></div>
+        <div class="r-section"><div class="r-section-label">Technical</div><div class="r-tech">Web App Manifest (manifest.json) + Service Worker (sw.js). Single HTML file refactored into index.html, style.css, app.js.</div></div>
+        <div class="r-section"><div class="r-section-label">Why</div><div class="r-why">Required for reliable iPhone notifications and proper Home Screen installation.</div></div>
+        <div class="r-notes">⚠ Must be completed before R-02 and R-03.</div>
+      </div>
+    </div>
+
+    <div class="roadmap-item">
+      <div class="roadmap-item-header" onclick="toggleRoadmap(this)">
+        <div class="r-id">R-03</div>
+        <div class="r-title">Offline Mode</div>
+        <div class="r-right"><div class="r-target">v2.0</div><div class="r-status s-inscope">In Scope</div></div>
+      </div>
+      <div class="roadmap-item-body">
+        <div class="r-section"><div class="r-section-label">Plain English</div><div class="r-plain">MedTime should work with no internet connection. All data stays accessible and any actions taken offline sync automatically when you reconnect.</div></div>
+        <div class="r-section"><div class="r-section-label">Technical</div><div class="r-tech">Service Worker Cache API for app assets. Background Sync API for queued offline actions.</div></div>
+        <div class="r-section"><div class="r-section-label">Why</div><div class="r-why">Medication tracking should never fail due to a poor signal.</div></div>
+      </div>
+    </div>
+
+    <div class="roadmap-item">
+      <div class="roadmap-item-header" onclick="toggleRoadmap(this)">
+        <div class="r-id">R-05</div>
+        <div class="r-title">Lightweight Backend Service</div>
+        <div class="r-right"><div class="r-target">v2.0</div><div class="r-status s-inscope">In Scope</div></div>
+      </div>
+      <div class="roadmap-item-body">
+        <div class="r-section"><div class="r-section-label">Plain English</div><div class="r-plain">A small piece of software running in the cloud that sends push notifications at the right time and securely connects your two devices. You never interact with it — it runs silently in the background.</div></div>
+        <div class="r-section"><div class="r-section-label">Technical</div><div class="r-tech">Firebase Cloud Functions (Node.js). Handles VAPID push delivery, cron scheduling, and the household pairing endpoint (R-06).</div></div>
+        <div class="r-section"><div class="r-section-label">Why</div><div class="r-why">Server-side scheduling is required for reliable push. The phone cannot reliably schedule its own wakeup.</div></div>
+      </div>
+    </div>
+
+    <!-- SYNC -->
+    <div class="roadmap-group-header g-sync">Cloud Sync</div>
+
+    <div class="roadmap-item">
+      <div class="roadmap-item-header" onclick="toggleRoadmap(this)">
+        <div class="r-id">R-04</div>
+        <div class="r-title">Cloud Sync via Firebase</div>
+        <div class="r-right"><div class="r-target">v2.0</div><div class="r-status s-inscope">In Scope</div></div>
+      </div>
+      <div class="roadmap-item-body">
+        <div class="r-section"><div class="r-section-label">Plain English</div><div class="r-plain">Both devices share the same live data. The moment one of you marks medication as taken, the other phone updates automatically — no refreshing needed.</div></div>
+        <div class="r-section"><div class="r-section-label">Technical</div><div class="r-tech">Firebase Firestore replaces localStorage as primary data store. Both devices subscribe to onSnapshot() real-time listeners. localStorage remains as offline cache (R-03).</div></div>
+        <div class="r-section"><div class="r-section-label">Why</div><div class="r-why">Without this, each phone is completely independent — neither knows what the other is doing.</div></div>
+        <div class="r-notes">Free Firebase Spark plan is more than sufficient for this use case.</div>
+      </div>
+    </div>
+
+    <div class="roadmap-item">
+      <div class="roadmap-item-header" onclick="toggleRoadmap(this)">
+        <div class="r-id">R-06</div>
+        <div class="r-title">Household Pairing (6-digit code)</div>
+        <div class="r-right"><div class="r-target">v2.0</div><div class="r-status s-inscope">In Scope</div></div>
+      </div>
+      <div class="roadmap-item-body">
+        <div class="r-section"><div class="r-section-label">Plain English</div><div class="r-plain">One-time setup: one person generates a short code, the other types it in — phones linked. No accounts, no email, no passwords.</div></div>
+        <div class="r-section"><div class="r-section-label">Technical</div><div class="r-tech">UUID household ID generated on first launch. 6-char alphanumeric code maps to ID server-side (expires 10 min). Second device receives ID and reads/writes to the same Firestore document.</div></div>
+        <div class="r-section"><div class="r-section-label">Why</div><div class="r-why">Enables shared real-time data without requiring user accounts.</div></div>
+      </div>
+    </div>
+
+    <!-- NOTIFICATIONS -->
+    <div class="roadmap-group-header g-notif">Notifications</div>
+
+    <div class="roadmap-item">
+      <div class="roadmap-item-header" onclick="toggleRoadmap(this)">
+        <div class="r-id">R-02</div>
+        <div class="r-title">Reliable Background Push Notifications</div>
+        <div class="r-right"><div class="r-target">v2.0</div><div class="r-status s-inscope">In Scope</div></div>
+      </div>
+      <div class="roadmap-item-body">
+        <div class="r-section"><div class="r-section-label">Plain English</div><div class="r-plain">Current notifications fail if Safari is closed. This delivers a true push — wakes your phone at the scheduled time like a text message arriving.</div></div>
+        <div class="r-section"><div class="r-section-label">Technical</div><div class="r-tech">Web Push API with VAPID keys. Backend (R-05) dispatches pushes at scheduled times via cron. Service Worker handles the push event and calls showNotification().</div></div>
+        <div class="r-section"><div class="r-section-label">Why</div><div class="r-why">The most important reliability improvement for daily use.</div></div>
+        <div class="r-notes">⚠ Requires iOS 16.4+ and PWA installation (R-01).</div>
+      </div>
+    </div>
+
+    <div class="roadmap-item">
+      <div class="roadmap-item-header" onclick="toggleRoadmap(this)">
+        <div class="r-id">R-07</div>
+        <div class="r-title">Snooze Notification</div>
+        <div class="r-right"><div class="r-target">v2.0</div><div class="r-status s-planned">Planned</div></div>
+      </div>
+      <div class="roadmap-item-body">
+        <div class="r-section"><div class="r-section-label">Plain English</div><div class="r-plain">A "Snooze 15 min" button on the reminder notification delays it without dismissing — useful if you're in the middle of something.</div></div>
+        <div class="r-section"><div class="r-section-label">Why</div><div class="r-why">Reduces the chance of dismissing and then forgetting entirely.</div></div>
+        <div class="r-notes">Depends on R-02. Will degrade gracefully where not supported.</div>
+      </div>
+    </div>
+
+    <!-- UX -->
+    <div class="roadmap-group-header g-ux">UX & Design</div>
+
+    <div class="roadmap-item">
+      <div class="roadmap-item-header" onclick="toggleRoadmap(this)">
+        <div class="r-id">R-09</div>
+        <div class="r-title">Light / Dark Theme Toggle <span class="released-tag">Released v1.4</span></div>
+        <div class="r-right"><div class="r-target">v1.4</div><div class="r-status s-released">Released</div></div>
+      </div>
+      <div class="roadmap-item-body">
+        <div class="r-section"><div class="r-section-label">Plain English</div><div class="r-plain">Toggle in the burger menu switches between dark and light themes instantly. Preference is saved and remembered between sessions. Released early — ahead of v2.0 — because it was low complexity and high user value.</div></div>
+        <div class="r-section"><div class="r-section-label">Technical</div><div class="r-tech">body.light class overrides :root CSS custom properties. theme field persisted to localStorage.</div></div>
+      </div>
+    </div>
+
+    <!-- FEATURES -->
+    <div class="roadmap-group-header g-feature">Features</div>
+
+    <div class="roadmap-item">
+      <div class="roadmap-item-header" onclick="toggleRoadmap(this)">
+        <div class="r-id">R-08</div>
+        <div class="r-title">Weekly Adherence Score</div>
+        <div class="r-right"><div class="r-target">v2.0</div><div class="r-status s-planned">Planned</div></div>
+      </div>
+      <div class="roadmap-item-body">
+        <div class="r-section"><div class="r-section-label">Plain English</div><div class="r-plain">"6 of 7 this week" — a simple encouraging summary shown above the history list. Positive and motivating, not clinical.</div></div>
+        <div class="r-section"><div class="r-section-label">Technical</div><div class="r-tech">Calculated client-side from last 7 history entries. No data model changes required.</div></div>
+        <div class="r-notes">Tone should be encouraging, not punishing. No harsh streak resets.</div>
+      </div>
+    </div>
+
+    <div class="roadmap-item">
+      <div class="roadmap-item-header" onclick="toggleRoadmap(this)">
+        <div class="r-id">R-10</div>
+        <div class="r-title">Multiple Reminder Times Per Day</div>
+        <div class="r-right"><div class="r-target">v2.1</div><div class="r-status s-stretch">Stretch</div></div>
+      </div>
+      <div class="roadmap-item-body">
+        <div class="r-section"><div class="r-section-label">Plain English</div><div class="r-plain">Set separate morning and evening reminders, each tracked independently throughout the day.</div></div>
+        <div class="r-section"><div class="r-section-label">Technical</div><div class="r-tech">State model restructured from {taken, takenAt} to doseSlots:[{time, taken, takenAt, events}]. Countdown references next upcoming slot.</div></div>
+        <div class="r-notes">Significant model change — held back to avoid v2.0 scope creep.</div>
+      </div>
+    </div>
+
+    <div class="roadmap-item">
+      <div class="roadmap-item-header" onclick="toggleRoadmap(this)">
+        <div class="r-id">R-11</div>
+        <div class="r-title">History Export (PDF / CSV)</div>
+        <div class="r-right"><div class="r-target">v2.1</div><div class="r-status s-stretch">Stretch</div></div>
+      </div>
+      <div class="roadmap-item-body">
+        <div class="r-section"><div class="r-section-label">Plain English</div><div class="r-plain">Download a medication history summary — for GPs, carers, or personal records.</div></div>
+        <div class="r-notes">Start with CSV; PDF to follow.</div>
+      </div>
+    </div>
+
+    <div class="roadmap-item">
+      <div class="roadmap-item-header" onclick="toggleRoadmap(this)">
+        <div class="r-id">R-12</div>
+        <div class="r-title">Refill Reminder</div>
+        <div class="r-right"><div class="r-target">v2.1</div><div class="r-status s-stretch">Stretch</div></div>
+      </div>
+      <div class="roadmap-item-body">
+        <div class="r-section"><div class="r-section-label">Plain English</div><div class="r-plain">Enter how many tablets are left. The app warns when running low so you never run out unexpectedly.</div></div>
+        <div class="r-notes">Requires manual stock count entry by the user.</div>
+      </div>
+    </div>
+
+    <!-- FUTURE VISION -->
+    <div class="roadmap-group-header g-future">Future Vision</div>
+
+    <div class="roadmap-item">
+      <div class="roadmap-item-header" onclick="toggleRoadmap(this)">
+        <div class="r-id">R-13</div>
+        <div class="r-title">Advanced Mode — Scheduled Dosing</div>
+        <div class="r-right"><div class="r-target">v3.0+</div><div class="r-status s-future">Future</div></div>
+      </div>
+      <div class="roadmap-item-body">
+        <div class="r-section"><div class="r-section-label">Plain English</div><div class="r-plain">A toggle in the burger menu transforms MedTime from Simple Mode (one daily reminder) into a full scheduled dosing app — morning, lunch, dinner, and bedtime slots, each with their own medications, doses, and professional instructions. Each slot tracks independently with its own history and push notification. Advanced Mode can be switched on or off at any time without losing data. A clinical-grade export makes hospital admissions and carer handovers easy — structured like a medication administration chart that nursing staff can read at a glance.</div></div>
+        <div class="r-section"><div class="r-section-label">Technical</div><div class="r-tech">State model extended to named dose slots. Each slot: {slotName, time, medications:[{name, dose, form, instructions}], taken, takenAt, events[]}. Per-slot push notifications via backend (R-05). Export: tabular PDF/CSV with slot names as columns and dates as rows — designed to align with hospital NMR (National Medication Record) format. Builds on R-10, R-11, R-05.</div></div>
+        <div class="r-section"><div class="r-section-label">Why</div><div class="r-why">Most people managing health conditions take multiple medications at different times. A single reminder doesn't serve them. The export is specifically designed for hospital admissions where nursing staff need an accurate medication list immediately on arrival.</div></div>
+        <div class="r-notes">Major feature — warrants its own version milestone (v3.0). UX must remain easy to read even when the underlying schedule is complex.</div>
+      </div>
+    </div>
+
+    <div class="roadmap-item">
+      <div class="roadmap-item-header" onclick="toggleRoadmap(this)">
+        <div class="r-id">R-14</div>
+        <div class="r-title">eScript QR Scan-to-Import</div>
+        <div class="r-right"><div class="r-target">v3.0+</div><div class="r-status s-future">Future</div></div>
+      </div>
+      <div class="roadmap-item-body">
+        <div class="r-section"><div class="r-section-label">Plain English</div><div class="r-plain">Scan your Australian eScript QR code to automatically fill in medication name, form, dose, and instructions — no manual typing. Your doctor sends you the eScript by SMS or email; instead of just showing it to the pharmacist, you'd also scan it into MedTime.</div></div>
+        <div class="r-section"><div class="r-section-label">How eScripts actually work</div><div class="r-tech">Important: the QR code in an Australian eScript is NOT a self-contained data record. It's a secure token (a pointer) to your actual prescription stored on the National Prescription Delivery Service (NPDS), operated by Fred IT Group. Only conformant software registered with the Australian Digital Health Agency (ADHA) can use the token to retrieve prescription data. The full record (medication name, dose, instructions, repeats, PBS code) is in FHIR MedicationRequest format on the NPDS — but it's locked behind formal registration.</div></div>
+        <div class="r-section"><div class="r-section-label">Two pathways</div><div class="r-why"><b>Near-term (no registration):</b> The human-readable text shown when you open your eScript link displays the medication name, quantity, and date. MedTime could offer assisted import from that screen — faster than typing, no compliance needed.<br><br><b>Long-term (full integration):</b> Register as a Mobile Intermediary under the ADHA conformance scheme, unlocking access to the full FHIR prescription record including dose form, strength, detailed dosing instructions, and repeats. Apps like Scripty, MedAdvisor, and OpenPharmacy have already done this.</div></div>
+        <div class="r-notes">Near-term path (Pathway B) is the realistic first step. Full ADHA conformance (Pathway A) is a longer-term goal with legal and security obligations. Relevant standard: NPDS Conformance Profile v3.0.1.</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ══════════════════════════════════
+       TAB 3 — VERSION HISTORY
+  ══════════════════════════════════ -->
+  <div class="section" id="tab-history">
+    <p style="font-size:0.85rem;color:var(--muted);margin-bottom:16px;line-height:1.5">All releases in order. Planned versions shown for context.</p>
+
+    <div style="overflow-x:auto;border-radius:var(--radius);border:1px solid var(--border);">
+      <table class="ver-table">
+        <thead>
+          <tr>
+            <th>Version</th>
+            <th>Items</th>
+            <th>Summary</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="cur"><td class="ver-ver">v1.5.3</td><td>—</td><td>In-app changelog; R-13 & R-14 added to roadmap</td></tr>
+          <tr><td class="ver-ver">v1.5.2</td><td>—</td><td>Ambient glow radiates from orb edge</td></tr>
+          <tr><td class="ver-ver">v1.5.1</td><td>—</td><td>Amber early state — orb, ring, and pill all colour-matched</td></tr>
+          <tr><td class="ver-ver">v1.5</td><td>—</td><td>Early-take modal with note; orb clipping fixed</td></tr>
+          <tr><td class="ver-ver">v1.4.1</td><td>—</td><td>Undo banner now consistent with taken banner</td></tr>
+          <tr><td class="ver-ver">v1.4</td><td class="ver-items">R-09</td><td>Burger menu; light/dark theme; confirmation banner</td></tr>
+          <tr><td class="ver-ver">v1.3</td><td>—</td><td>Wording fix; thicker ring; larger text; versioning established</td></tr>
+          <tr><td class="ver-ver">v1.2</td><td>—</td><td>Circular orb; SVG progress ring; centred layout</td></tr>
+          <tr><td class="ver-ver">v1.1</td><td>—</td><td>Pill logo; settings cog moved inline</td></tr>
+          <tr><td class="ver-ver">v1.0</td><td>—</td><td>Initial launch — core reminder, history, settings</td></tr>
+          <tr class="plan"><td class="ver-ver" style="color:var(--blue)">v2.0</td><td class="ver-items">R-01–R-08</td><td>PWA, Firebase sync, household pairing, push notifications</td></tr>
+          <tr class="plan"><td class="ver-ver" style="color:var(--blue)">v2.1</td><td class="ver-items">R-10–R-12</td><td>Multiple daily reminders, history export, refill reminder</td></tr>
+          <tr class="future-row"><td class="ver-ver" style="color:var(--pink)">v3.0+</td><td class="ver-items" style="color:var(--pink)">R-13–R-14</td><td>Advanced Mode, eScript scan-to-import</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div style="margin-top:20px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;">
+      <div style="font-size:0.65rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--dim);margin-bottom:10px">Versioning convention</div>
+      <div style="font-size:0.85rem;color:var(--muted);line-height:1.55">
+        <b style="color:var(--text)">x.0</b> — Major new architecture or redesign. You decide when to call this.<br>
+        <b style="color:var(--text)">x.x</b> — Incremental improvement or new feature.<br>
+        <b style="color:var(--text)">x.x.x</b> — Bug fix, wording correction, minor patch.
+      </div>
+    </div>
+  </div>
+
+  <div class="site-footer">
+    MedTime v1.5.3 &nbsp;·&nbsp; Release Notes & Roadmap<br>
+    Items marked RELEASED stay permanently with the version they shipped in.<br>
+    Items marked FUTURE have no version target yet — directional only.
+  </div>
+
+</div>
+
+<script>
+function showTab(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  event.target.classList.add('active');
+}
+
+function toggleCard(header) {
+  const card = header.closest('.release-card');
+  card.classList.toggle('open');
+}
+
+function toggleRoadmap(header) {
+  const item = header.closest('.roadmap-item');
+  // Close others in same group
+  document.querySelectorAll('.roadmap-item.open').forEach(el => {
+    if (el !== item) el.classList.remove('open');
+  });
+  item.classList.toggle('open');
+}
+</script>
+</body>
+</html>
