@@ -3105,6 +3105,8 @@ function exitCarerMode(){
 }
 
 // Haptics are called directly inside each action function (see confirmTake, undoTaken, takeSlot, undoSlot)
+
+function fmtMins(mins) {
   const h = Math.floor(mins/60), m = mins%60;
   if (h > 0 && m > 0) return `${h}h ${m}m`;
   if (h > 0) return `${h}h`;
