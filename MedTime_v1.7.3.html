@@ -1,0 +1,3193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MedTime v1.7.3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ══════════════════════════════════════
+   THEME TOKENS — dark (default)
+══════════════════════════════════════ */
+:root {
+  --bg:          #0d1117;
+  --surface:     #161b22;
+  --surface2:    #1e2530;
+  --border:      #30363d;
+  --text:        #e6edf3;
+  --text-muted:  #7d8590;
+  --text-dim:    #484f58;
+  --green:       #3fb950;
+  --green-glow:  rgba(63,185,80,0.30);
+  --green-dim:   rgba(63,185,80,0.08);
+  --red:         #f85149;
+  --red-glow:    rgba(248,81,73,0.30);
+  --red-dim:     rgba(248,81,73,0.08);
+  --amber:       #d29922;
+  --amber-glow:  rgba(210,153,34,0.25);
+  --blue:        #58a6ff;
+  --blue-glow:   rgba(88,166,255,0.2);
+  --radius:      12px;
+  --font-head:   'DM Serif Display', serif;
+  --font-body:   'DM Sans', sans-serif;
+  --ring-w:      10px;
+  --pill-l-bg:   #ffffff;
+  --pill-l-text: #0d1117;
+  --pill-r-bg:   #0d1117;
+  --pill-r-text: #ffffff;
+  --pill-r-border: #30363d;
+  --shadow:      rgba(0,0,0,0.4);
+}
+
+/* ── LIGHT THEME OVERRIDES ── */
+body.light {
+  --bg:          #f4f6f9;
+  --surface:     #ffffff;
+  --surface2:    #eef1f5;
+  --border:      #d0d7de;
+  --text:        #1c2128;
+  --text-muted:  #57606a;
+  --text-dim:    #8c959f;
+  --green-dim:   rgba(63,185,80,0.10);
+  --red-dim:     rgba(248,81,73,0.10);
+  --blue-glow:   rgba(88,166,255,0.15);
+  --pill-l-bg:   #1c2128;
+  --pill-l-text: #ffffff;
+  --pill-r-bg:   #ffffff;
+  --pill-r-text: #1c2128;
+  --pill-r-border: #d0d7de;
+  --shadow:      rgba(0,0,0,0.12);
+}
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+  transition: background 0.35s, color 0.35s;
+}
+
+/* grain — hidden in light mode */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events: none; z-index: 1000; opacity: 0.4;
+  transition: opacity 0.35s;
+}
+body.light::before { opacity: 0; }
+
+.app {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 0 16px 80px;
+}
+
+/* ══════════════════════════════════════
+   HEADER — pill logo + burger
+══════════════════════════════════════ */
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 0 14px;
+}
+
+/* spacer so logo stays centred */
+.header-side { width: 40px; }
+
+.pill-logo {
+  display: inline-flex;
+  align-items: stretch;
+  border-radius: 999px;
+  overflow: hidden;
+  height: 36px;
+  font-family: var(--font-head);
+  font-size: 1.05rem;
+  letter-spacing: 0.01em;
+  user-select: none;
+  transition: box-shadow 0.5s;
+}
+.pill-left  {
+  padding: 0 14px 0 17px;
+  background: var(--pill-l-bg); color: var(--pill-l-text);
+  display: flex; align-items: center;
+  transition: background .5s, color .5s;
+}
+.pill-right {
+  padding: 0 17px 0 14px;
+  background: var(--pill-r-bg); color: var(--pill-r-text);
+  display: flex; align-items: center;
+  border-left: 2px solid var(--pill-r-border);
+  transition: background .5s, color .5s, border-color .5s;
+}
+
+/* pill status colours */
+body.status-taken .pill-left   { background: var(--green); color:#fff; }
+body.status-taken .pill-right  { background: #fff; color:var(--green); border-left-color:var(--green); }
+body.status-taken .pill-logo   { box-shadow: 0 0 18px var(--green-glow); }
+body.status-alert .pill-left   { background: var(--red); color:#fff; }
+body.status-alert .pill-right  { background: #fff; color:var(--red); border-left-color:var(--red); }
+body.status-alert .pill-logo   { box-shadow: 0 0 18px var(--red-glow); }
+body.status-early .pill-left   { background: var(--amber); color:#fff; }
+body.status-early .pill-right  { background: #fff; color:var(--amber); border-left-color:var(--amber); }
+body.status-early .pill-logo   { box-shadow: 0 0 18px var(--amber-glow); }
+
+/* ── BURGER BUTTON ── */
+.burger-btn {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 5px;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+.burger-btn:hover { color: var(--text); border-color: var(--blue); background: var(--surface2); }
+.burger-btn span {
+  display: block;
+  width: 16px; height: 1.5px;
+  background: currentColor;
+  border-radius: 2px;
+  transition: all 0.3s;
+}
+/* animate to X when open */
+.burger-btn.open span:nth-child(1) { transform: translateY(6.5px) rotate(45deg); }
+.burger-btn.open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+.burger-btn.open span:nth-child(3) { transform: translateY(-6.5px) rotate(-45deg); }
+
+/* ══════════════════════════════════════
+   BURGER MENU DRAWER
+══════════════════════════════════════ */
+.menu-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.55);
+  z-index: 400;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.3s;
+  backdrop-filter: blur(3px);
+}
+.menu-overlay.open { opacity: 1; pointer-events: all; }
+
+.menu-drawer {
+  position: fixed;
+  top: 0; right: 0; bottom: 0;
+  width: min(280px, 80vw);
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+  z-index: 401;
+  transform: translateX(100%);
+  transition: transform 0.35s cubic-bezier(0.4,0,0.2,1);
+  display: flex; flex-direction: column;
+  padding: 0 0 32px;
+  overflow-y: auto;
+}
+.menu-drawer.open { transform: translateX(0); }
+
+.menu-header {
+  padding: 20px 20px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.menu-title {
+  font-family: var(--font-head);
+  font-size: 1.2rem;
+  color: var(--text);
+}
+.menu-close {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+.menu-close:hover { color: var(--text); }
+
+.menu-section {
+  padding: 16px 20px 8px;
+}
+.menu-section-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 10px;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.18s;
+  margin-bottom: 4px;
+  border: none;
+  background: transparent;
+  width: 100%;
+  text-align: left;
+  color: var(--text);
+  font-family: var(--font-body);
+}
+.menu-item:hover { background: var(--surface2); }
+
+.menu-item-left { display: flex; align-items: center; gap: 11px; }
+.menu-item-icon {
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  background: var(--surface2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.95rem;
+  flex-shrink: 0;
+  border: 1px solid var(--border);
+}
+.menu-item-label { font-size: 0.9rem; font-weight: 500; color: var(--text); }
+.menu-item-sub   { font-size: 0.72rem; color: var(--text-dim); margin-top: 1px; }
+
+/* ── TOGGLE SWITCH ── */
+.toggle-switch {
+  width: 42px; height: 24px;
+  border-radius: 12px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  position: relative;
+  cursor: pointer;
+  transition: background 0.25s, border-color 0.25s;
+  flex-shrink: 0;
+}
+.toggle-switch.on { background: var(--green); border-color: var(--green); }
+.toggle-switch::after {
+  content: '';
+  position: absolute;
+  width: 18px; height: 18px;
+  background: #fff;
+  border-radius: 50%;
+  top: 2px; left: 2px;
+  transition: transform 0.25s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+.toggle-switch.on::after { transform: translateX(18px); }
+
+.menu-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 8px 20px;
+}
+
+.menu-version {
+  padding: 12px 20px 0;
+  font-size: 0.68rem;
+  color: var(--text-dim);
+  letter-spacing: 0.06em;
+}
+
+/* ══════════════════════════════════════
+   UNIFIED SWIPE BANNER (v1.4.1)
+   — used for both taken (green) and undo (amber)
+   — swipe up to dismiss, auto-expires after 6s
+   — no tap required, page does not move
+══════════════════════════════════════ */
+.swipe-banner {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 9000;
+  /* sits above viewport, slides down on show */
+  transform: translateY(-100%);
+  transition: transform 0.4s cubic-bezier(0.34,1.25,0.64,1);
+  /* prevent banner touch events from scrolling the page */
+  touch-action: none;
+  user-select: none;
+  will-change: transform;
+}
+.swipe-banner.show      { transform: translateY(0); }
+.swipe-banner.swiping   { transition: none; }          /* live-track finger */
+.swipe-banner.dismissing{ transform: translateY(-110%);
+                           transition: transform 0.28s ease-in; }
+
+.swipe-banner-inner {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 13px 18px 13px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  /* colour set via inline style from JS */
+  transition: background 0.2s;
+}
+
+/* Colour variants */
+.swipe-banner.green .swipe-banner-inner {
+  background: var(--green);
+  box-shadow: 0 4px 24px rgba(63,185,80,0.35);
+}
+.swipe-banner.amber .swipe-banner-inner {
+  background: var(--amber);
+  box-shadow: 0 4px 24px rgba(210,153,34,0.35);
+}
+
+.swipe-banner-icon {
+  width: 30px; height: 30px;
+  background: rgba(255,255,255,0.22);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.95rem;
+  flex-shrink: 0;
+}
+.swipe-banner-text { flex: 1; min-width: 0; }
+.swipe-banner-title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.2;
+}
+.swipe-banner-sub {
+  font-size: 0.70rem;
+  color: rgba(255,255,255,0.75);
+  margin-top: 2px;
+}
+
+/* Swipe hint chevron — always visible, no button */
+.swipe-banner-hint {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+  opacity: 0.65;
+}
+.swipe-banner-hint svg {
+  width: 18px; height: 18px;
+  fill: #fff;
+  animation: hint-bob 1.8s ease-in-out infinite;
+}
+.swipe-banner-hint span {
+  font-size: 0.58rem;
+  color: rgba(255,255,255,0.7);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+@keyframes hint-bob {
+  0%,100% { transform: translateY(0); }
+  50%     { transform: translateY(-3px); }
+}
+
+/* Progress bar — shows time remaining before auto-dismiss */
+.swipe-banner-bar {
+  position: absolute;
+  bottom: 0; left: 0;
+  height: 2px;
+  background: rgba(255,255,255,0.35);
+  width: 100%;
+  transform-origin: left;
+  animation: bar-drain 6s linear forwards;
+}
+@keyframes bar-drain { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+
+/* ══════════════════════════════════════
+   EARLY-TAKE MODAL (v1.5)
+══════════════════════════════════════ */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.72);
+  z-index: 800;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.25s;
+  backdrop-filter: blur(6px);
+  display: flex; align-items: flex-end;
+  justify-content: center;
+}
+.modal-overlay.open { opacity: 1; pointer-events: all; }
+
+.modal-sheet {
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  border-radius: 20px 20px 0 0;
+  padding: 0 20px 40px;
+  width: 100%; max-width: 480px;
+  transform: translateY(100%);
+  transition: transform 0.35s cubic-bezier(0.34,1.15,0.64,1);
+}
+.modal-overlay.open .modal-sheet { transform: translateY(0); }
+
+.modal-handle {
+  width: 40px; height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  margin: 14px auto 20px;
+}
+
+.modal-icon {
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  background: var(--amber-glow);
+  border: 2px solid var(--amber);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.4rem;
+  margin: 0 auto 14px;
+}
+
+.modal-title {
+  font-family: var(--font-head);
+  font-size: 1.3rem;
+  color: var(--text);
+  text-align: center;
+  margin-bottom: 6px;
+}
+
+.modal-body {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  text-align: center;
+  line-height: 1.5;
+  margin-bottom: 20px;
+}
+
+.modal-body strong { color: var(--amber); }
+
+.modal-note-label {
+  font-size: 0.70rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 6px;
+}
+
+.modal-note-input {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  padding: 10px 12px;
+  outline: none;
+  resize: none;
+  transition: border-color 0.2s;
+  min-height: 72px;
+}
+.modal-note-input:focus { border-color: var(--amber); }
+.modal-note-input::placeholder { color: var(--text-dim); }
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.modal-btn {
+  flex: 1;
+  padding: 13px;
+  border-radius: var(--radius);
+  border: none;
+  font-family: var(--font-body);
+  font-size: 0.92rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.modal-btn-cancel {
+  background: var(--surface2);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+}
+.modal-btn-cancel:hover { color: var(--text); border-color: var(--text-muted); }
+.modal-btn-confirm {
+  background: var(--amber);
+  color: #fff;
+}
+.modal-btn-confirm:hover { opacity: 0.88; }
+
+/* Early badge in history */
+.ev-badge.early {
+  background: rgba(210,153,34,0.18);
+  color: var(--amber);
+}
+.early-note {
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  font-style: italic;
+  margin-left: 4px;
+}
+
+/* ══════════════════════════════════════
+   ORB
+══════════════════════════════════════ */
+.orb-wrap {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+  position: relative;      /* needed for ::after positioning */
+}
+
+/* Ambient glow — large radial gradient centred on the orb,
+   brightest at the ring edge, dissolving to nothing outward.
+   Lives behind everything via z-index:-1               */
+.orb-wrap::after {
+  content: '';
+  position: absolute;
+  /* Make it bigger than the orb so glow spills well past the ring */
+  width: 500px;
+  height: 500px;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.6s ease, background 0.6s ease;
+}
+
+/* State colours — radial gradient peaks near the orb circumference
+   (around 28–32% of the 500px radius = ~140–160px = ring edge)
+   then falls to transparent by ~65%                        */
+.orb-wrap.glow-green::after {
+  background: radial-gradient(circle,
+    transparent           26%,
+    rgba(63,185,80,0.28)  34%,
+    rgba(63,185,80,0.14)  44%,
+    rgba(63,185,80,0.05)  56%,
+    transparent           68%
+  );
+  opacity: 1;
+}
+.orb-wrap.glow-red::after {
+  background: radial-gradient(circle,
+    transparent           26%,
+    rgba(248,81,73,0.28)  34%,
+    rgba(248,81,73,0.14)  44%,
+    rgba(248,81,73,0.05)  56%,
+    transparent           68%
+  );
+  opacity: 1;
+}
+.orb-wrap.glow-amber::after {
+  background: radial-gradient(circle,
+    transparent           26%,
+    rgba(210,153,34,0.28) 34%,
+    rgba(210,153,34,0.14) 44%,
+    rgba(210,153,34,0.05) 56%,
+    transparent           68%
+  );
+  opacity: 1;
+}
+
+.orb {
+  position: relative;
+  width: 300px; height: 300px;
+  display: flex; align-items: center; justify-content: center;
+}
+.orb-face {
+  position: absolute; inset: 20px;
+  border-radius: 50%;
+  background: var(--surface);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  text-align: center;
+  transition: box-shadow .5s, background .35s;
+  overflow: visible;
+}
+.orb-face::before {
+  content: ''; position: absolute; inset: 0; border-radius: 50%;
+  opacity: 0; transition: opacity .5s, background .5s; pointer-events: none;
+}
+.taken .orb-face     { box-shadow: 0 0 50px var(--green-glow), 0 0 90px rgba(63,185,80,0.12), inset 0 0 50px var(--green-dim); }
+.taken .orb-face::before { background: radial-gradient(circle at 50% 50%,rgba(63,185,80,.12) 0%,transparent 70%); opacity:1; }
+.not-taken .orb-face { box-shadow: 0 0 50px var(--red-glow), 0 0 90px rgba(248,81,73,0.10), inset 0 0 50px var(--red-dim); }
+.not-taken .orb-face::before { background: radial-gradient(circle at 50% 50%,rgba(248,81,73,.10) 0%,transparent 70%); opacity:1; }
+/* Early taken — amber glow */
+.early .orb-face { box-shadow: 0 0 50px var(--amber-glow), 0 0 90px rgba(210,153,34,0.12), inset 0 0 50px rgba(210,153,34,0.07); }
+.early .orb-face::before { background: radial-gradient(circle at 50% 50%,rgba(210,153,34,.10) 0%,transparent 70%); opacity:1; }
+
+.orb-svg { position: absolute; inset:0; width:100%; height:100%; pointer-events:none; }
+.orb-svg .track    { fill:none; stroke:var(--surface2); stroke-width:var(--ring-w); transition: stroke .35s; }
+.orb-svg .progress { fill:none; stroke:var(--text-dim); stroke-width:var(--ring-w); stroke-linecap:round; stroke-dasharray:879.6; stroke-dashoffset:879.6; transform:rotate(-90deg); transform-origin:50% 50%; transition: stroke-dashoffset 1s ease, stroke .5s; }
+.taken     .orb-svg .progress { stroke:var(--green); }
+.not-taken .orb-svg .progress { stroke:var(--red); }
+.early     .orb-svg .progress { stroke:var(--amber); }
+
+.orb-inner { position:relative; z-index:1; display:flex; flex-direction:column; align-items:center; gap:0; padding:0 22px; width:100%; max-width:220px; }
+
+.orb-status-dot { width:8px; height:8px; border-radius:50%; background:var(--text-dim); margin-bottom:6px; transition:background .4s,box-shadow .4s; }
+.taken .orb-status-dot     { background:var(--green); animation:pulse-green 2s infinite; }
+.not-taken .orb-status-dot { background:var(--red);   animation:pulse-red   2s infinite; }
+.early .orb-status-dot     { background:var(--amber);  animation:pulse-amber 2s infinite; }
+
+@keyframes pulse-green { 0%,100%{box-shadow:0 0 0 0 rgba(63,185,80,.5);}  50%{box-shadow:0 0 0 7px rgba(63,185,80,0);} }
+@keyframes pulse-red   { 0%,100%{box-shadow:0 0 0 0 rgba(248,81,73,.5);}  50%{box-shadow:0 0 0 7px rgba(248,81,73,0);} }
+@keyframes pulse-amber { 0%,100%{box-shadow:0 0 0 0 rgba(210,153,34,.5);} 50%{box-shadow:0 0 0 7px rgba(210,153,34,0);} }
+
+.orb-status-label { font-size:.65rem; font-weight:700; letter-spacing:.13em; text-transform:uppercase; color:var(--text-dim); margin-bottom:4px; transition:color .4s; }
+.taken .orb-status-label     { color:var(--green); }
+.not-taken .orb-status-label { color:var(--red); }
+.early .orb-status-label     { color:var(--amber); }
+
+.orb-clock  { font-family:var(--font-head); font-size:3.8rem; line-height:1; letter-spacing:-0.03em; color:var(--text); margin-bottom:2px; }
+.orb-date   { font-size:.70rem; color:var(--text-dim); font-weight:500; }
+.orb-taken-at { font-size:.68rem; font-weight:600; color:var(--green); margin-top:4px; opacity:0; transition:opacity .4s, color .4s; min-height:1em; }
+.taken .orb-taken-at { opacity:1; }
+.early .orb-taken-at { opacity:1; color:var(--amber); }
+
+.orb-divider { width:44px; height:1px; background:var(--border); margin:7px 0; transition:background .4s; }
+.taken .orb-divider     { background:rgba(63,185,80,.3); }
+.not-taken .orb-divider { background:rgba(248,81,73,.3); }
+.early .orb-divider     { background:rgba(210,153,34,.3); }
+
+.orb-cd-label { font-size:.58rem; font-weight:700; letter-spacing:.11em; text-transform:uppercase; color:var(--text-dim); margin-bottom:5px; }
+.orb-cd-digits { display:flex; gap:3px; align-items:center; }
+.orb-cd-block  { background:var(--surface2); border:1px solid var(--border); border-radius:5px; padding:4px 6px; text-align:center; min-width:40px; transition:border-color .4s,background .35s; }
+.taken .orb-cd-block     { border-color:rgba(63,185,80,.25); }
+.not-taken .orb-cd-block { border-color:rgba(248,81,73,.25); }
+.early .orb-cd-block     { border-color:rgba(210,153,34,.25); }
+.orb-cd-num  { font-family:var(--font-head); font-size:1.3rem; line-height:1; color:var(--text); transition:color .4s; }
+.taken .orb-cd-num     { color:var(--green); }
+.not-taken .orb-cd-num { color:var(--red); }
+.early .orb-cd-num     { color:var(--amber); }
+.orb-cd-unit { font-size:.48rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--text-dim); margin-top:2px; }
+.orb-cd-sep  { font-family:var(--font-head); font-size:1rem; color:var(--text-dim); margin-bottom:8px; transition:color .4s; }
+.taken .orb-cd-sep     { color:rgba(63,185,80,.5); }
+.not-taken .orb-cd-sep { color:rgba(248,81,73,.5); }
+.early .orb-cd-sep     { color:rgba(210,153,34,.5); }
+
+/* ══════════════════════════════════════
+   ACTION BUTTONS
+══════════════════════════════════════ */
+.action-btn { width:100%; padding:15px; border-radius:var(--radius); border:none; font-family:var(--font-body); font-size:.97rem; font-weight:700; cursor:pointer; transition:all .25s; margin-bottom:10px; position:relative; overflow:hidden; }
+.action-btn::after { content:''; position:absolute; inset:0; background:white; opacity:0; transition:opacity .15s; }
+.action-btn:active::after { opacity:.1; }
+.btn-take { background:linear-gradient(135deg,#2ea043,#3fb950); color:#fff; box-shadow:0 4px 20px var(--green-glow); }
+.btn-take:hover { transform:translateY(-1px); box-shadow:0 6px 28px rgba(63,185,80,.45); }
+.btn-undo { background:var(--surface); color:var(--text-muted); border:1px solid var(--border); }
+.btn-undo:hover { border-color:var(--text-muted); color:var(--text); }
+
+/* ══════════════════════════════════════
+   SECTION HEADERS
+══════════════════════════════════════ */
+.section-header { display:flex; align-items:center; justify-content:space-between; margin-top:20px; margin-bottom:10px; }
+.section-title  { font-size:.70rem; font-weight:700; letter-spacing:.13em; text-transform:uppercase; color:var(--text-dim); }
+.section-settings-btn { display:inline-flex; align-items:center; gap:5px; padding:4px 10px; border-radius:999px; background:var(--surface); border:1px solid var(--border); color:var(--text-dim); font-family:var(--font-body); font-size:.70rem; font-weight:600; letter-spacing:.05em; cursor:pointer; transition:all .2s; height:24px; }
+.section-settings-btn:hover { color:var(--text); border-color:var(--blue); background:var(--surface2); }
+.section-settings-btn svg { width:10px; height:10px; fill:currentColor; flex-shrink:0; transition:transform .4s; }
+.section-settings-btn:hover svg { transform:rotate(60deg); }
+
+/* ══════════════════════════════════════
+   MED LIST
+══════════════════════════════════════ */
+.med-list { display:flex; flex-direction:column; gap:8px; }
+.med-item { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:13px 15px; display:flex; align-items:flex-start; gap:11px; transition: background .35s, border-color .35s; }
+.med-icon { width:30px; height:30px; border-radius:7px; background:var(--surface2); display:flex; align-items:center; justify-content:center; font-size:.95rem; flex-shrink:0; transition: background .35s; }
+.med-info { flex:1; min-width:0; }
+.med-name   { font-weight:700; font-size:.92rem; margin-bottom:2px; }
+.med-dosage { font-size:.78rem; color:var(--text-muted); }
+.med-notes  { font-size:.73rem; color:var(--text-dim); margin-top:3px; font-style:italic; }
+.med-empty  { text-align:center; padding:22px; color:var(--text-dim); font-size:.83rem; background:var(--surface); border:1px dashed var(--border); border-radius:var(--radius); }
+
+/* ══════════════════════════════════════
+   NOTIFICATION HINT
+══════════════════════════════════════ */
+.notif-hint { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:13px 15px; display:flex; align-items:center; gap:11px; font-size:.80rem; color:var(--text-muted); margin-top:14px; transition: background .35s, border-color .35s; }
+.notif-enable-btn { margin-left:auto; padding:5px 11px; border-radius:6px; background:var(--blue); color:#fff; border:none; font-family:var(--font-body); font-size:.73rem; font-weight:700; cursor:pointer; white-space:nowrap; transition:opacity .2s; }
+.notif-enable-btn:hover { opacity:.85; }
+
+/* ══════════════════════════════════════
+   HISTORY
+══════════════════════════════════════ */
+.history-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; transition: background .35s, border-color .35s; }
+.history-empty { padding:18px; color:var(--text-dim); font-size:.80rem; text-align:center; }
+.history-row   { padding:11px 15px; border-bottom:1px solid var(--border); }
+.history-row:last-child { border-bottom:none; }
+.history-main  { display:flex; align-items:center; gap:9px; font-size:.80rem; }
+.history-dot   { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+.history-dot.taken   { background:var(--green); }
+.history-dot.missed  { background:var(--red); }
+.history-dot.partial { background:var(--amber); }
+.history-date   { color:var(--text-muted); }
+.history-status { font-weight:700; }
+.history-time   { margin-left:auto; color:var(--text-dim); font-variant-numeric:tabular-nums; white-space:nowrap; }
+.history-events { margin-top:6px; padding-left:16px; display:flex; flex-direction:column; gap:4px; }
+.history-event  { display:flex; align-items:center; gap:7px; font-size:.72rem; }
+.ev-dot { width:5px; height:5px; border-radius:50%; flex-shrink:0; }
+.ev-dot.ev-taken { background:var(--green); }
+.ev-dot.ev-undo  { background:var(--amber); }
+.ev-time  { color:var(--text-dim); font-variant-numeric:tabular-nums; min-width:58px; }
+.ev-label { color:var(--text-muted); }
+.ev-badge { margin-left:auto; font-size:.62rem; font-weight:700; letter-spacing:.07em; text-transform:uppercase; padding:1px 5px; border-radius:4px; }
+.ev-badge.taken { background:var(--green-dim); color:var(--green); }
+.ev-badge.undo  { background:var(--amber-glow); color:var(--amber); }
+
+/* ══════════════════════════════════════
+   TOAST (for non-taken alerts only)
+══════════════════════════════════════ */
+.toast { position:fixed; top:20px; left:50%; transform:translateX(-50%) translateY(-90px); background:var(--surface2); border:1px solid var(--border); border-radius:var(--radius); padding:12px 18px; font-size:.86rem; font-weight:600; z-index:9999; max-width:340px; width:90%; box-shadow:0 8px 32px var(--shadow); transition:transform .4s cubic-bezier(0.34,1.56,0.64,1); text-align:center; }
+.toast.show  { transform:translateX(-50%) translateY(0); }
+.toast.amber { border-color:var(--amber); color:var(--amber); }
+.toast.green { border-color:var(--green); color:var(--green); }
+.toast.red   { border-color:var(--red);   color:var(--red); }
+
+/* ══════════════════════════════════════
+   SETTINGS PANEL
+══════════════════════════════════════ */
+.settings-overlay { position:fixed; inset:0; background:rgba(0,0,0,.65); z-index:500; opacity:0; pointer-events:none; transition:opacity .3s; backdrop-filter:blur(4px); }
+.settings-overlay.open { opacity:1; pointer-events:all; }
+.settings-panel { position:fixed; bottom:0; left:0; right:0; max-width:480px; margin:0 auto; background:var(--surface); border-top:1px solid var(--border); border-radius:20px 20px 0 0; padding:24px 20px 48px; z-index:501; transform:translateY(100%); transition:transform .4s cubic-bezier(0.34,1.2,0.64,1); max-height:90vh; overflow-y:auto; }
+.settings-panel.open { transform:translateY(0); }
+.panel-handle { width:40px; height:4px; background:var(--border); border-radius:2px; margin:0 auto 20px; }
+.panel-title  { font-family:var(--font-head); font-size:1.5rem; margin-bottom:24px; }
+.setting-group { margin-bottom:22px; }
+.setting-label { font-size:.70rem; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--text-muted); margin-bottom:8px; }
+.time-input { background:var(--surface2); border:1px solid var(--border); border-radius:8px; color:var(--text); font-family:var(--font-body); font-size:1rem; padding:10px 14px; width:100%; outline:none; transition:border-color .2s; }
+.time-input:focus { border-color:var(--blue); }
+.time-input[type="time"]::-webkit-calendar-picker-indicator { filter:invert(.6); cursor:pointer; }
+.med-editor-list { display:flex; flex-direction:column; gap:8px; margin-bottom:10px; }
+.med-editor-item { background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:12px; display:flex; flex-direction:column; gap:8px; }
+.med-editor-row  { display:flex; gap:8px; align-items:center; }
+.med-input { background:var(--bg); border:1px solid var(--border); border-radius:6px; color:var(--text); font-family:var(--font-body); font-size:.84rem; padding:8px 10px; outline:none; flex:1; transition:border-color .2s; }
+.med-input:focus { border-color:var(--blue); }
+.med-input::placeholder { color:var(--text-dim); }
+.remove-med-btn { width:28px; height:28px; border-radius:6px; background:var(--red-dim); border:1px solid rgba(248,81,73,.2); color:var(--red); cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:.88rem; transition:all .2s; flex-shrink:0; }
+.remove-med-btn:hover { background:rgba(248,81,73,.2); }
+.add-med-btn { width:100%; padding:10px; border-radius:8px; background:transparent; border:1px dashed var(--border); color:var(--text-muted); font-family:var(--font-body); font-size:.84rem; cursor:pointer; transition:all .2s; }
+.add-med-btn:hover { border-color:var(--blue); color:var(--blue); }
+.save-btn { width:100%; padding:14px; border-radius:var(--radius); background:var(--blue); border:none; color:#fff; font-family:var(--font-body); font-size:.95rem; font-weight:700; cursor:pointer; transition:opacity .2s; margin-top:8px; }
+.save-btn:hover { opacity:.85; }
+.emoji-row { display:flex; gap:6px; flex-wrap:wrap; }
+.emoji-opt { width:34px; height:34px; border-radius:8px; background:var(--surface2); border:1px solid var(--border); cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:1.05rem; transition:all .15s; }
+.emoji-opt.selected,.emoji-opt:hover { border-color:var(--blue); background:var(--blue-glow); }
+
+/* ── CHANGELOG PANEL ── */
+.cl-release { padding: 4px 0 8px; }
+
+.cl-version-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.cl-version {
+  font-family: var(--font-head);
+  font-size: 1.15rem;
+  color: var(--text);
+  line-height: 1;
+}
+.cl-date {
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  margin-left: auto;
+}
+.cl-badge {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 4px;
+}
+.cl-badge-new { background: var(--blue-glow); color: var(--blue); }
+.cl-badge-fix { background: var(--green-dim); color: var(--green); }
+
+.cl-section-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin: 8px 0 5px;
+}
+.cl-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 0;
+}
+.cl-list li {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  line-height: 1.45;
+  padding-left: 14px;
+  position: relative;
+}
+.cl-list li::before {
+  content: '·';
+  position: absolute;
+  left: 3px;
+  color: var(--text-dim);
+  font-weight: 700;
+}
+.cl-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 14px 0;
+}
+
+/* ══════════════════════════════════════
+   ADVANCED MODE — v1.6
+══════════════════════════════════════ */
+
+/* Mode badge on pill logo */
+.mode-badge {
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 2px 10px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  background: var(--surface2);
+  transition: all 0.3s;
+  white-space: nowrap;
+  text-align: center;
+}
+body.advanced-mode .mode-badge {
+  background: rgba(88,166,255,0.12);
+  border-color: var(--blue);
+  color: var(--blue);
+}
+
+/* Advanced view — replaces orb-wrap + action buttons */
+.adv-view { display: none; }
+body.advanced-mode .adv-view  { display: block; }
+body.advanced-mode .simple-view { display: none; }
+
+/* Slot stack — full width, stacked */
+.slot-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+/* ── BASE SLOT CARD ── */
+.slot-card {
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.4s ease;
+  cursor: default;
+  width: 100%;
+}
+
+.slot-card::before {
+  content: '';
+  position: absolute; inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s;
+}
+
+/* ── TAKEN — compact, clearly confirmed, softly glowing ── */
+.slot-card.slot-taken {
+  border-color: rgba(63,185,80,0.35);
+  background: var(--surface);
+  padding: 10px 16px;  /* reduced height — done, step aside */
+  opacity: 0.72;
+}
+.slot-card.slot-taken::before {
+  background: linear-gradient(90deg, rgba(63,185,80,0.06) 0%, transparent 60%);
+  opacity: 1;
+}
+.slot-card.slot-early {
+  border-color: rgba(210,153,34,0.4);
+  padding: 10px 16px;
+  opacity: 0.72;
+}
+.slot-card.slot-early::before {
+  background: linear-gradient(90deg, rgba(210,153,34,0.07) 0%, transparent 60%);
+  opacity: 1;
+}
+
+/* ── NEXT — the star, prominent ── */
+.slot-card.slot-next {
+  border-color: var(--blue);
+  box-shadow: 0 0 24px var(--blue-glow), inset 0 0 30px rgba(88,166,255,0.05);
+  padding: 18px 16px; /* slightly taller */
+}
+.slot-card.slot-next::before {
+  background: radial-gradient(ellipse at 50% 0%, rgba(88,166,255,.08) 0%, transparent 70%);
+  opacity: 1;
+}
+
+/* ── OVERDUE / MISSED — urgent red ── */
+.slot-card.slot-not-taken {
+  border-color: var(--red);
+  box-shadow: 0 0 20px var(--red-glow), inset 0 0 24px var(--red-dim);
+}
+.slot-card.slot-not-taken::before {
+  background: radial-gradient(ellipse at 50% 0%, rgba(248,81,73,.09) 0%, transparent 70%);
+  opacity: 1;
+}
+
+/* ── FUTURE — quiet, pending ── */
+.slot-card.slot-pending {
+  border-color: var(--border);
+  opacity: 0.55;
+}
+
+/* ── SLOT HEADER ROW ── */
+.slot-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.slot-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--text-dim);
+  transition: background 0.4s;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+.slot-taken .slot-dot     { background: var(--green); }
+.slot-not-taken .slot-dot { background: var(--red);   animation: pulse-red   2s infinite; }
+.slot-early .slot-dot     { background: var(--amber); }
+.slot-next .slot-dot      { background: var(--blue);  animation: pulse-blue  2s infinite; }
+
+@keyframes pulse-blue {
+  0%,100% { box-shadow: 0 0 0 0 rgba(88,166,255,0.5); }
+  50%     { box-shadow: 0 0 0 6px rgba(88,166,255,0); }
+}
+
+.slot-name {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  transition: color 0.4s;
+}
+.slot-taken .slot-name     { color: var(--green); }
+.slot-not-taken .slot-name { color: var(--red); }
+.slot-early .slot-name     { color: var(--amber); }
+.slot-next .slot-name      { color: var(--blue); }
+.slot-pending .slot-name   { color: var(--text-dim); }
+
+/* Time display — bigger on next, smaller on taken */
+.slot-time-big {
+  font-family: var(--font-head);
+  font-size: 1.7rem;
+  line-height: 1;
+  color: var(--text);
+  letter-spacing: -0.02em;
+  transition: font-size 0.3s;
+}
+.slot-taken .slot-time-big,
+.slot-early .slot-time-big { font-size: 1.1rem; color: var(--text-muted); }
+.slot-next .slot-time-big  { font-size: 2rem; }
+.slot-pending .slot-time-big { color: var(--text-dim); }
+
+/* Status / taken time */
+.slot-status-text {
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  min-height: 1em;
+  transition: color 0.4s;
+}
+.slot-taken .slot-status-text     { font-size: 0.72rem; color: var(--green); }
+.slot-not-taken .slot-status-text { color: var(--red); font-weight: 600; }
+.slot-early .slot-status-text     { font-size: 0.72rem; color: var(--amber); }
+.slot-next .slot-status-text      { color: var(--blue); font-size: 0.82rem; font-weight: 600; }
+
+/* Countdown — only shown on next and overdue */
+.slot-countdown {
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+  min-height: 1em;
+}
+.slot-next .slot-countdown      { color: var(--blue); font-weight: 600; font-size: 0.82rem; }
+.slot-not-taken .slot-countdown { color: var(--red); }
+
+/* Medications inside slot */
+.slot-meds {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 3px;
+}
+.slot-taken .slot-meds,
+.slot-early .slot-meds { opacity: 0.6; }
+
+.slot-med-chip {
+  font-size: 0.68rem;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 2px 7px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+.slot-next .slot-med-chip {
+  border-color: rgba(88,166,255,0.25);
+  font-size: 0.72rem;
+}
+.slot-not-taken .slot-med-chip {
+  border-color: rgba(248,81,73,0.2);
+}
+
+/* Slot action button */
+.slot-btn {
+  margin-top: 8px;
+  width: 100%;
+  padding: 10px 6px;
+  border-radius: 8px;
+  border: none;
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+.slot-btn::after { content:''; position:absolute; inset:0; background:white; opacity:0; transition:opacity .15s; }
+.slot-btn:active::after { opacity:.12; }
+
+.slot-btn-take {
+  background: linear-gradient(135deg,#2ea043,#3fb950);
+  color: #fff;
+  box-shadow: 0 3px 14px var(--green-glow);
+  font-size: 0.9rem;
+  padding: 12px;
+}
+.slot-btn-take:hover { transform: translateY(-1px); box-shadow: 0 5px 20px rgba(63,185,80,0.4); }
+
+.slot-btn-taken  {
+  background: transparent;
+  color: var(--green);
+  border: 1px solid rgba(63,185,80,0.25);
+  cursor: default;
+  font-size: 0.72rem;
+  padding: 6px;
+  margin-top: 4px;
+}
+.slot-btn-early  {
+  background: transparent;
+  color: var(--amber);
+  border: 1px solid rgba(210,153,34,0.25);
+  cursor: default;
+  font-size: 0.72rem;
+  padding: 6px;
+  margin-top: 4px;
+}
+.slot-btn-take-now {
+  background: linear-gradient(135deg, #b45309, #d29922);
+  color: #fff;
+  font-size: 0.88rem;
+  padding: 11px;
+  box-shadow: 0 3px 14px var(--amber-glow);
+}
+.slot-btn-undo {
+  background: transparent;
+  color: var(--text-dim);
+  border: 1px solid var(--border);
+  font-size: 0.65rem;
+  padding: 5px;
+  margin-top: 3px;
+}
+.slot-btn-undo:hover { color: var(--text-muted); }
+.slot-btn-future {
+  background: transparent;
+  color: var(--text-dim);
+  border: 1px dashed var(--border);
+  cursor: pointer;
+  font-size: 0.7rem;
+  padding: 6px;
+  margin-top: 2px;
+}
+.slot-btn-future:hover { color: var(--text-muted); border-color: var(--text-dim); }
+
+/* MISSED label badge */
+.slot-missed-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--red);
+  background: var(--red-dim);
+  border: 1px solid rgba(248,81,73,0.25);
+  border-radius: 4px;
+  padding: 2px 7px;
+  margin-top: 2px;
+  width: fit-content;
+}
+
+/* Advanced summary banner — next dose */
+.adv-next-banner {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 13px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  transition: border-color 0.4s;
+}
+.adv-next-banner.all-done {
+  border-color: var(--green);
+  background: var(--green-dim);
+}
+.adv-next-icon { font-size: 1.3rem; flex-shrink: 0; }
+.adv-next-label {
+  font-size: 0.65rem; font-weight: 700; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--text-dim); margin-bottom: 2px;
+}
+.adv-next-value { font-size: 0.9rem; font-weight: 600; color: var(--text); }
+.adv-next-cd {
+  margin-left: auto; font-size: 0.82rem; color: var(--blue);
+  font-variant-numeric: tabular-nums; text-align: right;
+  white-space: nowrap; font-weight: 600; font-family: var(--font-head);
+}
+
+/* ══════════════════════════════════════
+   v1.7 NEW FEATURES
+══════════════════════════════════════ */
+
+/* ── ONBOARDING ── */
+.onboarding-overlay {
+  position: fixed; inset: 0;
+  background: var(--bg);
+  z-index: 9000;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 32px 24px 48px;
+  transition: opacity 0.4s;
+}
+.onboarding-overlay.hidden { opacity: 0; pointer-events: none; }
+.ob-step { display: none; width: 100%; max-width: 400px; text-align: center; }
+.ob-step.active { display: flex; flex-direction: column; align-items: center; gap: 16px; animation: fadeUp 0.35s ease both; }
+.ob-icon { font-size: 3.2rem; line-height: 1; margin-bottom: 4px; }
+.ob-title { font-family: var(--font-head); font-size: 1.8rem; color: var(--text); line-height: 1.15; }
+.ob-body { font-size: 0.92rem; color: var(--text-muted); line-height: 1.6; max-width: 320px; }
+.ob-input-group { width: 100%; display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
+.ob-label { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim); text-align: left; }
+.ob-input { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-family: var(--font-body); font-size: 1rem; padding: 13px 16px; width: 100%; outline: none; transition: border-color 0.2s; text-align: center; }
+.ob-input:focus { border-color: var(--blue); }
+.ob-input[type="time"] { font-size: 1.4rem; font-family: var(--font-head); }
+.ob-input[type="time"]::-webkit-calendar-picker-indicator { filter: invert(0.5); }
+.ob-btn { width: 100%; padding: 15px; border-radius: var(--radius); border: none; font-family: var(--font-body); font-size: 1rem; font-weight: 700; cursor: pointer; background: var(--blue); color: #fff; transition: opacity 0.2s, transform 0.15s; margin-top: 4px; }
+.ob-btn:hover { opacity: 0.88; }
+.ob-btn:active { transform: scale(0.98); }
+.ob-btn-ghost { background: transparent; color: var(--text-dim); border: 1px solid var(--border); font-size: 0.85rem; padding: 10px; }
+.ob-dots { display: flex; gap: 8px; margin-top: 8px; }
+.ob-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--border); transition: background 0.3s; }
+.ob-dot.active { background: var(--blue); }
+.ob-who-options { display: flex; gap: 10px; width: 100%; }
+.ob-who-btn { flex: 1; padding: 16px 8px; border-radius: var(--radius); border: 2px solid var(--border); background: var(--surface); color: var(--text); font-family: var(--font-body); font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.ob-who-btn:hover, .ob-who-btn.selected { border-color: var(--blue); background: var(--blue-glow); color: var(--blue); }
+.ob-who-emoji { font-size: 1.6rem; }
+
+/* ── STREAK BANNER ── */
+.streak-banner { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 16px; display: flex; align-items: center; gap: 12px; margin-bottom: 14px; transition: all 0.3s; }
+.streak-banner.has-streak { border-color: rgba(63,185,80,0.3); }
+.streak-icon { font-size: 1.2rem; flex-shrink: 0; }
+.streak-text { flex: 1; }
+.streak-label { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 2px; }
+.streak-value { font-size: 0.9rem; font-weight: 600; color: var(--text); }
+.streak-value .hl { color: var(--green); }
+.streak-sub { font-size: 0.72rem; color: var(--text-dim); margin-top: 1px; }
+.streak-score { font-family: var(--font-head); font-size: 1.6rem; color: var(--green); line-height: 1; flex-shrink: 0; }
+
+/* ── HEATMAP ── */
+.heatmap-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 14px 12px; margin-bottom: 10px; }
+.heatmap-title { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 10px; }
+.heatmap-grid { display: flex; flex-wrap: wrap; gap: 3px; }
+.hm-day { width: 26px; height: 26px; border-radius: 4px; background: var(--surface2); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 0.5rem; color: var(--text-dim); cursor: default; transition: transform 0.15s; position: relative; }
+.hm-day:hover { transform: scale(1.2); z-index: 2; }
+.hm-day.hm-taken  { background: var(--green); border-color: var(--green); color: rgba(255,255,255,0.7); }
+.hm-day.hm-missed { background: var(--red);   border-color: var(--red);   color: rgba(255,255,255,0.7); }
+.hm-day.hm-early  { background: var(--amber); border-color: var(--amber); color: rgba(255,255,255,0.7); }
+.hm-day.hm-today  { box-shadow: 0 0 0 2px var(--blue); }
+.hm-day.hm-future { opacity: 0.2; }
+.heatmap-legend { display: flex; gap: 12px; margin-top: 10px; flex-wrap: wrap; }
+.hm-legend-item { display: flex; align-items: center; gap: 5px; font-size: 0.65rem; color: var(--text-dim); }
+.hm-legend-dot { width: 9px; height: 9px; border-radius: 3px; }
+
+/* ── CAREGIVER ── */
+.carer-banner { position: fixed; top: 0; left: 0; right: 0; background: var(--blue); padding: 10px 16px; display: flex; align-items: center; gap: 10px; z-index: 800; font-size: 0.82rem; font-weight: 600; color: #fff; }
+.carer-banner-text { flex: 1; }
+.carer-exit-btn { padding: 4px 12px; border-radius: 6px; background: rgba(255,255,255,0.2); border: none; color: #fff; font-family: var(--font-body); font-size: 0.75rem; font-weight: 700; cursor: pointer; }
+body.carer-mode .app { padding-top: 48px; }
+body.carer-mode .action-btn, body.carer-mode .slot-btn-take, body.carer-mode .slot-btn-undo, body.carer-mode .btn-undo, body.carer-mode .section-settings-btn, body.carer-mode #notifHint, body.carer-mode .slot-taken-undo { display: none !important; }
+body.carer-mode .burger-btn { display: none; }
+
+.carer-pin-overlay { position: fixed; inset: 0; background: var(--bg); z-index: 8000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 32px 24px; gap: 18px; }
+.carer-pin-title { font-family: var(--font-head); font-size: 1.6rem; color: var(--text); text-align: center; }
+.carer-pin-sub { font-size: 0.88rem; color: var(--text-muted); text-align: center; line-height: 1.5; }
+.carer-pin-dots { display: flex; gap: 12px; margin: 4px 0; }
+.carer-pin-dot { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--border); background: transparent; transition: all 0.2s; }
+.carer-pin-dot.filled { background: var(--blue); border-color: var(--blue); }
+.carer-pin-pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; max-width: 240px; }
+.carer-pin-key { padding: 18px; border-radius: 12px; background: var(--surface); border: 1px solid var(--border); color: var(--text); font-family: var(--font-head); font-size: 1.4rem; cursor: pointer; text-align: center; transition: all 0.15s; user-select: none; }
+.carer-pin-key:active { background: var(--blue); color: #fff; transform: scale(0.95); }
+.carer-pin-key.del { font-size: 1rem; color: var(--text-muted); font-family: var(--font-body); font-size: 0.85rem; }
+.carer-pin-error { color: var(--red); font-size: 0.82rem; min-height: 1.2em; }
+.carer-pin-setup { font-size: 0.8rem; color: var(--text-dim); text-align: center; line-height: 1.5; }
+
+/* ── STRUCTURED MEDS ── */
+.med-struct-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.med-select { background: var(--bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-family: var(--font-body); font-size: 0.84rem; padding: 8px 28px 8px 10px; outline: none; width: 100%; transition: border-color 0.2s; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%237d8590'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; }
+.med-select:focus { border-color: var(--blue); }
+.med-info-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+.med-info-chip { font-size: 0.68rem; background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; padding: 2px 7px; color: var(--text-dim); }
+
+/* ── SLOT TAKEN — ultra-compact ── */
+.slot-card.slot-taken { padding: 9px 14px; opacity: 0.6; transition: all 0.4s ease; }
+.slot-card.slot-taken:hover { opacity: 0.9; }
+.slot-taken-row { display: flex; align-items: center; gap: 10px; width: 100%; }
+.slot-taken-check { width: 20px; height: 20px; border-radius: 50%; background: var(--green); display: flex; align-items: center; justify-content: center; font-size: 0.7rem; color: #fff; flex-shrink: 0; }
+.slot-taken-info { flex: 1; min-width: 0; }
+.slot-taken-name { font-size: 0.72rem; font-weight: 700; color: var(--green); }
+.slot-taken-time { font-size: 0.65rem; color: var(--text-dim); }
+.slot-taken-undo { font-size: 0.65rem; color: var(--text-dim); background: transparent; border: none; cursor: pointer; padding: 4px 8px; border-radius: 4px; font-family: var(--font-body); flex-shrink: 0; }
+.slot-taken-undo:hover { color: var(--text-muted); background: var(--surface2); }
+.slot-early-row { display: flex; align-items: center; gap: 10px; width: 100%; }
+.slot-early-check { width: 20px; height: 20px; border-radius: 50%; background: var(--amber); display: flex; align-items: center; justify-content: center; font-size: 0.7rem; color: #fff; flex-shrink: 0; }
+
+/* Settings early window */
+.window-row { display: flex; gap: 10px; align-items: center; }
+.window-label-inline { font-size: 0.85rem; color: var(--text-muted); }
+
+.slot-settings-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.slot-settings-icon {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+.slot-settings-title { font-family: var(--font-head); font-size: 1.2rem; color: var(--text); }
+
+.slot-section {
+  margin-bottom: 18px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--border);
+}
+.slot-section:last-of-type { border-bottom: none; }
+.slot-section-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+/* Advanced history */
+.adv-hist-slot-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin: 8px 0 4px;
+  padding-left: 2px;
+}
+
+/* ── ADVANCED MODE TOGGLE in menu ── */
+.adv-mode-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.version-tag { text-align:center; font-size:.60rem; color:var(--text-dim); letter-spacing:.08em; margin-top:28px; }
+
+::-webkit-scrollbar { width:4px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+
+@keyframes fadeUp { from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);} }
+.app>* { animation:fadeUp .5s ease both; }
+.app>*:nth-child(2){animation-delay:.06s;}
+.app>*:nth-child(3){animation-delay:.12s;}
+.app>*:nth-child(4){animation-delay:.18s;}
+</style>
+</head>
+<body>
+
+<!-- ── CAREGIVER BANNER ── -->
+<div class="carer-banner" id="carerBanner" style="display:none">
+  <span class="carer-banner-text">👁 Caregiver View — read only</span>
+  <button class="carer-exit-btn" onclick="exitCarerMode()">Exit</button>
+</div>
+
+<!-- ── CAREGIVER PIN OVERLAY ── -->
+<div class="carer-pin-overlay" id="carerPinOverlay" style="display:none">
+  <div class="ob-icon">🔒</div>
+  <div class="carer-pin-title" id="carerPinTitle">Caregiver Access</div>
+  <div class="carer-pin-sub" id="carerPinSub">Enter your 4-digit PIN to switch to read-only caregiver view.</div>
+  <div class="carer-pin-dots" id="carerPinDots">
+    <div class="carer-pin-dot"></div><div class="carer-pin-dot"></div>
+    <div class="carer-pin-dot"></div><div class="carer-pin-dot"></div>
+  </div>
+  <div class="carer-pin-error" id="carerPinError"></div>
+  <div class="carer-pin-pad">
+    <div class="carer-pin-key" onclick="carerPinKey('1')">1</div>
+    <div class="carer-pin-key" onclick="carerPinKey('2')">2</div>
+    <div class="carer-pin-key" onclick="carerPinKey('3')">3</div>
+    <div class="carer-pin-key" onclick="carerPinKey('4')">4</div>
+    <div class="carer-pin-key" onclick="carerPinKey('5')">5</div>
+    <div class="carer-pin-key" onclick="carerPinKey('6')">6</div>
+    <div class="carer-pin-key" onclick="carerPinKey('7')">7</div>
+    <div class="carer-pin-key" onclick="carerPinKey('8')">8</div>
+    <div class="carer-pin-key" onclick="carerPinKey('9')">9</div>
+    <div class="carer-pin-key del" onclick="carerPinKey('cancel')">Cancel</div>
+    <div class="carer-pin-key" onclick="carerPinKey('0')">0</div>
+    <div class="carer-pin-key del" onclick="carerPinKey('del')">⌫</div>
+  </div>
+  <div class="carer-pin-setup" id="carerPinSetupNote"></div>
+</div>
+
+<!-- ── ONBOARDING ── -->
+<div class="onboarding-overlay" id="onboardingOverlay" style="display:none">
+
+  <!-- Step 1: Welcome -->
+  <div class="ob-step active" id="ob-step-1">
+    <div class="ob-icon">💊</div>
+    <div class="ob-title">Welcome to MedTime</div>
+    <div class="ob-body">A medication reminder built around you. Let's get you set up in three quick steps.</div>
+    <div class="ob-dots">
+      <div class="ob-dot active"></div><div class="ob-dot"></div><div class="ob-dot"></div>
+    </div>
+    <div style="width:100%;display:flex;flex-direction:column;gap:10px;margin-top:8px">
+      <div class="ob-label">Your name (optional)</div>
+      <input class="ob-input" type="text" id="obName" placeholder="e.g. Sarah" autocomplete="given-name">
+      <div class="ob-label">Are you setting this up for yourself or someone else?</div>
+      <div class="ob-who-options">
+        <button class="ob-who-btn selected" id="obForSelf" onclick="selectWho('self')">
+          <span class="ob-who-emoji">🙋</span>Myself
+        </button>
+        <button class="ob-who-btn" id="obForOther" onclick="selectWho('other')">
+          <span class="ob-who-emoji">&#10084;</span>Someone else
+        </button>
+      </div>
+    </div>
+    <button class="ob-btn" onclick="obNext(2)">Continue →</button>
+    <button class="ob-btn ob-btn-ghost" onclick="skipOnboarding()">Skip setup</button>
+  </div>
+
+  <!-- Step 2: Reminder time -->
+  <div class="ob-step" id="ob-step-2">
+    <div class="ob-icon">⏰</div>
+    <div class="ob-title">When do you take your medication?</div>
+    <div class="ob-body">Set your daily reminder time. You can change this at any time in Settings.</div>
+    <div class="ob-dots">
+      <div class="ob-dot"></div><div class="ob-dot active"></div><div class="ob-dot"></div>
+    </div>
+    <div class="ob-input-group">
+      <div class="ob-label">Reminder time</div>
+      <input class="ob-input" type="time" id="obTime" value="21:45">
+    </div>
+    <button class="ob-btn" onclick="obNext(3)">Continue →</button>
+    <button class="ob-btn ob-btn-ghost" onclick="obNext(1)">← Back</button>
+  </div>
+
+  <!-- Step 3: First medication -->
+  <div class="ob-step" id="ob-step-3">
+    <div class="ob-icon">🌿</div>
+    <div class="ob-title">Add your first medication</div>
+    <div class="ob-body">You can add more — and set doses, instructions, and notes — in Settings any time.</div>
+    <div class="ob-dots">
+      <div class="ob-dot"></div><div class="ob-dot"></div><div class="ob-dot active"></div>
+    </div>
+    <div class="ob-input-group">
+      <div class="ob-label">Medication name</div>
+      <input class="ob-input" type="text" id="obMedName" placeholder="e.g. Metformin" style="text-align:left">
+      <div class="ob-label">Dosage</div>
+      <input class="ob-input" type="text" id="obMedDose" placeholder="e.g. 500mg, 1 tablet" style="text-align:left">
+    </div>
+    <button class="ob-btn" onclick="finishOnboarding()" style="background:var(--green)">Let's go ✓</button>
+    <button class="ob-btn ob-btn-ghost" onclick="obNext(2)">← Back</button>
+  </div>
+
+</div>
+
+<div class="app" id="appMain">
+  <!-- ── HEADER ── -->
+  <header class="app-header">
+    <div class="header-side"></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:6px;">
+      <div class="pill-logo" id="pillLogo">
+        <div class="pill-left">Med</div>
+        <div class="pill-right">Time</div>
+      </div>
+      <div class="mode-badge" id="modeBadge">Simple</div>
+    </div>
+    <button class="burger-btn" id="burgerBtn" onclick="toggleMenu()" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </header>
+
+  <!-- ══════════ SIMPLE MODE ══════════ -->
+  <div class="simple-view">
+
+  <!-- ── ORB ── -->
+  <div class="orb-wrap">
+    <div class="orb" id="orbCard">
+      <svg class="orb-svg" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
+        <circle class="track"    cx="150" cy="150" r="140"/>
+        <circle class="progress" cx="150" cy="150" r="140" id="orbRing"/>
+      </svg>
+      <div class="orb-face">
+        <div class="orb-inner">
+          <div class="orb-status-dot"></div>
+          <div class="orb-status-label" id="orbStatusLabel">Awaiting dose</div>
+          <div class="orb-clock" id="orbClock">--:--</div>
+          <div class="orb-date" id="orbDate"></div>
+          <div class="orb-taken-at" id="orbTakenAt">&nbsp;</div>
+          <div class="orb-divider"></div>
+          <div class="orb-cd-label" id="orbCdLabel">Next dose due in</div>
+          <div class="orb-cd-digits">
+            <div class="orb-cd-block"><div class="orb-cd-num" id="cdH">00</div><div class="orb-cd-unit">hrs</div></div>
+            <div class="orb-cd-sep">:</div>
+            <div class="orb-cd-block"><div class="orb-cd-num" id="cdM">00</div><div class="orb-cd-unit">min</div></div>
+            <div class="orb-cd-sep">:</div>
+            <div class="orb-cd-block"><div class="orb-cd-num" id="cdS">00</div><div class="orb-cd-unit">sec</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <button class="action-btn btn-take" id="mainBtn" onclick="handleTakeMed()">✓ Mark as Taken</button>
+  <button class="action-btn btn-undo" id="undoBtn" onclick="undoTaken()" style="display:none;">↩ Undo — Mark as Not Taken</button>
+
+  <div class="section-header">
+    <div class="section-title">Today's Medications</div>
+    <button class="section-settings-btn" onclick="openSettings()">
+      <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+        <path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zm0 1a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3z"/>
+        <path d="M8 0a.75.75 0 0 1 .743.648l.016.138.03.278a4.75 4.75 0 0 1 1.4.58l.227-.157.234-.163a.75.75 0 0 1 .928.091l.908.908a.75.75 0 0 1 .091.928l-.163.234-.157.227a4.75 4.75 0 0 1 .58 1.4l.278.03.138.016a.75.75 0 0 1 0 1.486l-.138.016-.278.03a4.75 4.75 0 0 1-.58 1.4l.157.227.163.234a.75.75 0 0 1-.091.928l-.908.908a.75.75 0 0 1-.928.091l-.234-.163-.227-.157a4.75 4.75 0 0 1-1.4.58l-.03.278-.016.138a.75.75 0 0 1-1.486 0l-.016-.138-.03-.278a4.75 4.75 0 0 1-1.4-.58l-.227.157-.234.163a.75.75 0 0 1-.928-.091L1.908 11.4a.75.75 0 0 1-.091-.928l.163-.234.157-.227a4.75 4.75 0 0 1-.58-1.4l-.278-.03L1.141 8.5a.75.75 0 0 1 0-1.486l.138-.016.278-.03a4.75 4.75 0 0 1 .58-1.4l-.157-.227L1.817 5.1a.75.75 0 0 1 .091-.928l.908-.908a.75.75 0 0 1 .928-.091l.234.163.227.157a4.75 4.75 0 0 1 1.4-.58l.03-.278L7.257.487A.75.75 0 0 1 8 0z"/>
+      </svg>
+      Edit
+    </button>
+  </div>
+  <div class="med-list" id="medList"></div>
+
+  <div class="notif-hint" id="notifHint">
+    <span style="font-size:1rem">🔔</span>
+    <span>Enable notifications for <strong id="notifTime">9:45 PM</strong></span>
+    <button class="notif-enable-btn" onclick="enableNotifications()">Enable</button>
+  </div>
+
+  <div class="section-header" style="margin-top:22px;">
+    <div class="section-title">History</div>
+  </div>
+  <div class="streak-banner" id="streakBanner">
+    <div class="streak-icon" id="streakIcon">💊</div>
+    <div class="streak-text">
+      <div class="streak-label">Adherence</div>
+      <div class="streak-value" id="streakValue">Loading…</div>
+      <div class="streak-sub" id="streakSub"></div>
+    </div>
+    <div class="streak-score" id="streakScore"></div>
+  </div>
+  <div class="heatmap-wrap" id="heatmapWrap">
+    <div class="heatmap-title">Last 28 days</div>
+    <div class="heatmap-grid" id="heatmapGrid"></div>
+    <div class="heatmap-legend">
+      <div class="hm-legend-item"><div class="hm-legend-dot" style="background:var(--green)"></div>Taken</div>
+      <div class="hm-legend-item"><div class="hm-legend-dot" style="background:var(--amber)"></div>Early</div>
+      <div class="hm-legend-item"><div class="hm-legend-dot" style="background:var(--red)"></div>Missed</div>
+      <div class="hm-legend-item"><div class="hm-legend-dot" style="background:var(--surface2);border:1px solid var(--border)"></div>No data</div>
+    </div>
+  </div>
+  <div class="history-card" id="historyList">
+    <div class="history-empty">No history yet.</div>
+  </div>
+
+  </div><!-- end .simple-view -->
+
+  <!-- ══════════ ADVANCED MODE ══════════ -->
+  <div class="adv-view">
+
+    <!-- Next due summary banner -->
+    <div class="adv-next-banner" id="advNextBanner">
+      <div class="adv-next-icon" id="advNextIcon">💊</div>
+      <div>
+        <div class="adv-next-label">Next due</div>
+        <div class="adv-next-value" id="advNextValue">—</div>
+      </div>
+      <div class="adv-next-cd" id="advNextCd">—</div>
+    </div>
+
+    <!-- 4 slot cards -->
+    <div class="slot-grid" id="slotGrid"></div>
+
+    <!-- Advanced history -->
+    <div class="section-header" style="margin-top:22px;">
+      <div class="section-title">History</div>
+    </div>
+    <div class="history-card" id="advHistoryList">
+      <div class="history-empty">No history yet.</div>
+    </div>
+
+  </div><!-- end .adv-view -->
+
+  <div class="version-tag">MedTime v1.7.3</div>
+</div><!-- end #appMain -->
+
+<!-- ── EARLY-TAKE MODAL ── -->
+<div class="modal-overlay" id="earlyModal" onclick="handleEarlyOverlayClick(event)">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-icon">⏰</div>
+    <div class="modal-title">Taking medication early?</div>
+    <div class="modal-body" id="earlyModalBody">
+      Your next dose isn't due for <strong id="earlyTimeLeft">—</strong>.<br>
+      You can still take it now — just let us know why.
+    </div>
+    <div class="modal-note-label">Reason (optional but recommended)</div>
+    <textarea class="modal-note-input" id="earlyNoteInput"
+      placeholder="e.g. Going out this evening, taking it before I leave…"
+      maxlength="200"></textarea>
+    <div class="modal-actions">
+      <button class="modal-btn modal-btn-cancel" onclick="closeEarlyModal()">Cancel</button>
+      <button class="modal-btn modal-btn-confirm" onclick="confirmEarlyTake()">Take Now</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── UNIFIED SWIPE BANNER (v1.4.1) ── -->
+<div class="swipe-banner" id="swipeBanner" role="alert" aria-live="polite">
+  <div class="swipe-banner-inner">
+    <div class="swipe-banner-icon" id="bannerIcon">✓</div>
+    <div class="swipe-banner-text">
+      <div class="swipe-banner-title" id="bannerTitle">Medication marked as taken</div>
+      <div class="swipe-banner-sub"  id="bannerSub">Swipe up to dismiss</div>
+    </div>
+    <div class="swipe-banner-hint">
+      <!-- chevron up -->
+      <svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+        <path d="M10 6.5l-6 6 1.41 1.41L10 9.33l4.59 4.58L16 12.5z"/>
+      </svg>
+      <span>swipe</span>
+    </div>
+  </div>
+  <div class="swipe-banner-bar" id="bannerBar"></div>
+</div>
+
+<!-- ── TOAST (for warnings only) ── -->
+<div class="toast" id="toast"></div>
+
+<!-- ── BURGER MENU ── -->
+<div class="menu-overlay" id="menuOverlay" onclick="closeMenu()"></div>
+<div class="menu-drawer" id="menuDrawer">
+  <div class="menu-header">
+    <div class="menu-title">Menu</div>
+    <button class="menu-close" onclick="closeMenu()">✕</button>
+  </div>
+
+  <div class="menu-section">
+    <div class="menu-section-label">Appearance</div>
+    <div class="menu-item" onclick="toggleTheme()">
+      <div class="menu-item-left">
+        <div class="menu-item-icon" id="themeIcon">🌙</div>
+        <div>
+          <div class="menu-item-label" id="themeLabel">Dark Mode</div>
+          <div class="menu-item-sub" id="themeSub">Currently using dark theme</div>
+        </div>
+      </div>
+      <div class="toggle-switch" id="themeToggle"></div>
+    </div>
+  </div>
+
+  <div class="menu-divider"></div>
+
+  <div class="menu-section">
+    <div class="menu-section-label">App</div>
+    <div class="menu-item" onclick="toggleAdvancedMode()">
+      <div class="menu-item-left">
+        <div class="menu-item-icon">🏥</div>
+        <div>
+          <div class="menu-item-label" id="advModeLabel">Advanced Mode</div>
+          <div class="menu-item-sub" id="advModeSub">Switch to scheduled dosing</div>
+        </div>
+      </div>
+      <div class="toggle-switch" id="advModeToggle"></div>
+    </div>
+    <button class="menu-item" id="advSlotSettingsBtn" onclick="closeMenu(); openSlotSettings();" style="display:none;">
+      <div class="menu-item-left">
+        <div class="menu-item-icon">📋</div>
+        <div>
+          <div class="menu-item-label">Dose Schedule</div>
+          <div class="menu-item-sub">Edit slots, times &amp; medications</div>
+        </div>
+      </div>
+      <svg style="width:12px;height:12px;fill:var(--text-dim);flex-shrink:0" viewBox="0 0 16 16"><path d="M6.22 3.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06-1.06L9.94 8 6.22 4.28a.75.75 0 0 1 0-1.06z"/></svg>
+    </button>
+    <button class="menu-item" onclick="closeMenu(); openSettings();">
+      <div class="menu-item-left">
+        <div class="menu-item-icon">⚙️</div>
+        <div>
+          <div class="menu-item-label">Settings</div>
+          <div class="menu-item-sub">Medications, time, icon</div>
+        </div>
+      </div>
+    </button>
+    <button class="menu-item" onclick="closeMenu(); enableNotifications();">
+      <div class="menu-item-left">
+        <div class="menu-item-icon">🔔</div>
+        <div>
+          <div class="menu-item-label">Notifications</div>
+          <div class="menu-item-sub" id="notifMenuSub">Tap to enable</div>
+        </div>
+      </div>
+    </button>
+  </div>
+
+  <div class="menu-divider"></div>
+
+  <div class="menu-section">
+    <div class="menu-section-label">Info</div>
+    <button class="menu-item" onclick="closeMenu(); openCarerMode();">
+      <div class="menu-item-left">
+        <div class="menu-item-icon">👁</div>
+        <div>
+          <div class="menu-item-label">Caregiver View</div>
+          <div class="menu-item-sub">Read-only view for a carer or partner</div>
+        </div>
+      </div>
+    </button>
+    <button class="menu-item" onclick="closeMenu(); openChangelog();">
+      <div class="menu-item-left">
+        <div class="menu-item-icon">📋</div>
+        <div>
+          <div class="menu-item-label">What's New</div>
+          <div class="menu-item-sub">v1.7 — Changelog</div>
+        </div>
+      </div>
+      <svg style="width:12px;height:12px;fill:var(--text-dim);flex-shrink:0" viewBox="0 0 16 16"><path d="M6.22 3.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06-1.06L9.94 8 6.22 4.28a.75.75 0 0 1 0-1.06z"/></svg>
+    </button>
+  </div>
+
+  <div class="menu-version">MedTime v1.7</div>
+</div>
+
+<!-- ── CHANGELOG PANEL ── -->
+<div class="settings-overlay" id="changelogOverlay" onclick="closeChangelog()"></div>
+<div class="settings-panel" id="changelogPanel">
+  <div class="panel-handle"></div>
+  <div class="panel-title">What's New</div>
+
+  <!-- v1.5.3 -->
+  <div class="cl-release">
+    <div class="cl-version-row">
+      <span class="cl-version">v1.5.3</span>
+      <span class="cl-badge cl-badge-fix">Fix</span>
+      <span class="cl-date">Latest</span>
+    </div>
+    <div class="cl-section-label">Fixed</div>
+    <ul class="cl-list">
+      <li>Version changelog added to the menu — you're reading it</li>
+      <li>Version label in Info section corrected to v1.5.3</li>
+    </ul>
+  </div>
+
+  <div class="cl-divider"></div>
+
+  <!-- v1.5.2 -->
+  <div class="cl-release">
+    <div class="cl-version-row">
+      <span class="cl-version">v1.5.2</span>
+      <span class="cl-badge cl-badge-new">New</span>
+    </div>
+    <div class="cl-section-label">What's new</div>
+    <ul class="cl-list">
+      <li>Ambient glow radiates outward from the orb edge — colour matches your current status</li>
+      <li>Glow turns green when taken, amber when taken early, red when dose is due soon</li>
+      <li>Glow fades out when you're well ahead of the next dose</li>
+    </ul>
+  </div>
+
+  <div class="cl-divider"></div>
+
+  <!-- v1.5.1 -->
+  <div class="cl-release">
+    <div class="cl-version-row">
+      <span class="cl-version">v1.5.1</span>
+      <span class="cl-badge cl-badge-new">New</span>
+    </div>
+    <div class="cl-section-label">What's new</div>
+    <ul class="cl-list">
+      <li>Orb, ring, and pill logo now glow amber when medication was taken early</li>
+      <li>Early state has its own pulsing dot animation and coloured countdown</li>
+    </ul>
+    <div class="cl-section-label">Fixed</div>
+    <ul class="cl-list">
+      <li>Countdown blocks no longer clipped by the circle edge</li>
+    </ul>
+  </div>
+
+  <div class="cl-divider"></div>
+
+  <!-- v1.5 -->
+  <div class="cl-release">
+    <div class="cl-version-row">
+      <span class="cl-version">v1.5</span>
+      <span class="cl-badge cl-badge-new">New</span>
+    </div>
+    <div class="cl-section-label">What's new</div>
+    <ul class="cl-list">
+      <li>Taking medication early now shows a prompt instead of blocking you</li>
+      <li>You can add a note explaining why you're taking it early</li>
+      <li>History shows early doses with a ⚠ badge and your reason</li>
+    </ul>
+    <div class="cl-section-label">Fixed</div>
+    <ul class="cl-list">
+      <li>Countdown digits no longer cut off at the top of the circle</li>
+    </ul>
+  </div>
+
+  <div class="cl-divider"></div>
+
+  <!-- v1.4.1 -->
+  <div class="cl-release">
+    <div class="cl-version-row">
+      <span class="cl-version">v1.4.1</span>
+      <span class="cl-badge cl-badge-fix">Fix</span>
+    </div>
+    <div class="cl-section-label">Fixed</div>
+    <ul class="cl-list">
+      <li>Undo banner now swipes to dismiss — same as the taken banner</li>
+      <li>Swiping the banner no longer scrolls the page behind it</li>
+      <li>Both banners auto-dismiss after 6 seconds with a progress bar</li>
+    </ul>
+  </div>
+
+  <div class="cl-divider"></div>
+
+  <!-- v1.4 -->
+  <div class="cl-release">
+    <div class="cl-version-row">
+      <span class="cl-version">v1.4</span>
+      <span class="cl-badge cl-badge-new">New</span>
+    </div>
+    <div class="cl-section-label">What's new</div>
+    <ul class="cl-list">
+      <li>Burger menu (☰) — quick access to settings and appearance</li>
+      <li>Light and dark theme toggle, remembered between sessions</li>
+      <li>Confirmation banner when medication is marked as taken</li>
+    </ul>
+  </div>
+
+  <div class="cl-divider"></div>
+
+  <!-- v1.3 -->
+  <div class="cl-release">
+    <div class="cl-version-row">
+      <span class="cl-version">v1.3</span>
+      <span class="cl-badge cl-badge-fix">Fix</span>
+    </div>
+    <div class="cl-section-label">Fixed</div>
+    <ul class="cl-list">
+      <li>Countdown now reads "Next dose due in" — clearer wording</li>
+      <li>Progress ring made thicker and easier to see</li>
+      <li>Clock and countdown text made larger throughout</li>
+    </ul>
+  </div>
+
+  <div class="cl-divider"></div>
+
+  <!-- v1.2 -->
+  <div class="cl-release">
+    <div class="cl-version-row">
+      <span class="cl-version">v1.2</span>
+      <span class="cl-badge cl-badge-new">New</span>
+    </div>
+    <div class="cl-section-label">What's new</div>
+    <ul class="cl-list">
+      <li>Circular orb design with everything centred inside</li>
+      <li>Progress ring around the orb fills as you approach dose time</li>
+    </ul>
+  </div>
+
+  <div class="cl-divider"></div>
+
+  <!-- v1.1 -->
+  <div class="cl-release">
+    <div class="cl-version-row">
+      <span class="cl-version">v1.1</span>
+      <span class="cl-badge cl-badge-new">New</span>
+    </div>
+    <div class="cl-section-label">What's new</div>
+    <ul class="cl-list">
+      <li>MedTime pill logo in the header</li>
+      <li>Edit button moved next to the medication list — more intuitive</li>
+    </ul>
+  </div>
+
+  <div class="cl-divider"></div>
+
+  <!-- v1.0 -->
+  <div class="cl-release">
+    <div class="cl-version-row">
+      <span class="cl-version">v1.0</span>
+      <span class="cl-badge cl-badge-new">New</span>
+    </div>
+    <div class="cl-section-label">What's new</div>
+    <ul class="cl-list">
+      <li>Countdown to your next dose</li>
+      <li>Mark medication as taken — turns green when done</li>
+      <li>Undo button if you tap by mistake</li>
+      <li>Medication list with name, dose, and notes</li>
+      <li>Daily history log with timestamps</li>
+      <li>Settings: reminder time, medications, app icon</li>
+      <li>Browser notification support</li>
+    </ul>
+  </div>
+
+</div>
+
+<!-- ── SLOT SETTINGS PANEL ── -->
+<div class="settings-overlay" id="slotSettingsOverlay" onclick="closeSlotSettings()"></div>
+<div class="settings-panel" id="slotSettingsPanel">
+  <div class="panel-handle"></div>
+  <div class="panel-title">Dose Schedule</div>
+  <p style="font-size:0.83rem;color:var(--text-muted);margin-bottom:18px;line-height:1.5">Configure each dose slot — set the time and add medications with dose and instructions.</p>
+  <div id="slotEditorList"></div>
+  <button class="save-btn" onclick="saveSlotSettings()">Save Schedule</button>
+</div>
+
+<!-- ── SETTINGS PANEL ── -->
+<div class="settings-overlay" id="settingsOverlay" onclick="closeSettings()"></div>
+<div class="settings-panel" id="settingsPanel">
+  <div class="panel-handle"></div>
+  <div class="panel-title">Settings</div>
+  <div class="setting-group">
+    <div class="setting-label">Early Dose Window</div>
+    <div class="window-row">
+      <select class="med-select" id="earlyWindowInput" style="flex:none;width:auto">
+        <option value="15">15 minutes</option>
+        <option value="30" selected>30 minutes</option>
+        <option value="60">1 hour</option>
+        <option value="120">2 hours</option>
+        <option value="180">3 hours</option>
+        <option value="0">Always ask</option>
+      </select>
+      <div class="window-label-inline">before due time</div>
+    </div>
+    <div style="font-size:0.75rem;color:var(--text-dim);margin-top:6px;line-height:1.4">Taking medication before this window will prompt the early override confirmation.</div>
+  </div>
+  <div class="setting-group">
+    <div class="setting-label">Caregiver PIN</div>
+    <div style="font-size:0.82rem;color:var(--text-muted);margin-bottom:8px;line-height:1.4">Set a 4-digit PIN so a carer or family member can access the read-only Caregiver View from the menu.</div>
+    <input class="time-input" type="password" inputmode="numeric" maxlength="4" id="carerPinSetInput" placeholder="4-digit PIN (e.g. 1234)">
+  </div>
+  <div class="setting-group">
+    <div class="setting-label">Reminder Time</div>
+    <input type="time" class="time-input" id="timeInput" value="21:45">
+  </div>
+  <div class="setting-group">
+    <div class="setting-label">Medications</div>
+    <div class="med-editor-list" id="medEditorList"></div>
+    <button class="add-med-btn" onclick="addMedField()">+ Add Medication</button>
+  </div>
+  <div class="setting-group">
+    <div class="setting-label">App Icon</div>
+    <div class="emoji-row" id="emojiRow"></div>
+  </div>
+  <button class="save-btn" onclick="saveSettings()">Save Settings</button>
+</div>
+
+<script>
+const EMOJIS=['💊','🩺','💉','🌡','🧬','❤️','🌿','⚡','🌙','⭐'];
+const STATE_KEY='medtime_state', HIST_KEY='medtime_history';
+
+let state={
+  reminderTime:'21:45',
+  meds:[{id:1,name:'Example Med',dosage:'10mg',icon:'💊',notes:'',form:'',route:'',food:'',timing:''}],
+  taken:false,takenAt:null,todayEvents:[],
+  lastResetDate:todayStr(),appIcon:'💊',
+  notifEnabled:false,
+  theme:'dark',
+  advancedMode:false,
+  earlyWindow:30,
+  carerPin:'',
+  onboardingDone:false,
+  userName:'',
+  whoFor:'self'
+};
+let notifTimer=null;
+
+function todayStr(){return new Date().toLocaleDateString('en-CA');}
+
+function loadState(){
+  try{const s=localStorage.getItem(STATE_KEY);if(s)state={...state,...JSON.parse(s)};if(!Array.isArray(state.todayEvents))state.todayEvents=[];}catch(e){}
+  if(state.lastResetDate!==todayStr()){archiveDay();state.taken=false;state.takenAt=null;state.todayEvents=[];state.lastResetDate=todayStr();saveState();}
+}
+function saveState(){localStorage.setItem(STATE_KEY,JSON.stringify(state));}
+function archiveDay(){
+  const hist=getHistory();
+  hist.unshift({date:state.lastResetDate,taken:state.taken,takenAt:state.takenAt,events:state.todayEvents||[]});
+  localStorage.setItem(HIST_KEY,JSON.stringify(hist.slice(0,30)));
+}
+function getHistory(){try{return JSON.parse(localStorage.getItem(HIST_KEY))||[];}catch{return[];}}
+
+// ── THEME ──
+function applyTheme(t){
+  document.body.classList.toggle('light', t==='light');
+  const isDark = t==='dark';
+  document.getElementById('themeIcon').textContent  = isDark ? '🌙' : '☀️';
+  document.getElementById('themeLabel').textContent  = isDark ? 'Dark Mode' : 'Light Mode';
+  document.getElementById('themeSub').textContent    = isDark ? 'Currently using dark theme' : 'Currently using light theme';
+  const tog = document.getElementById('themeToggle');
+  tog.classList.toggle('on', !isDark); // toggle is ON when light
+}
+function toggleTheme(){
+  state.theme = state.theme==='dark' ? 'light' : 'dark';
+  applyTheme(state.theme);
+  saveState();
+}
+
+// ── BURGER MENU ──
+function toggleMenu(){
+  const open = document.getElementById('menuDrawer').classList.contains('open');
+  open ? closeMenu() : openMenu();
+}
+function openMenu(){
+  document.getElementById('menuDrawer').classList.add('open');
+  document.getElementById('menuOverlay').classList.add('open');
+  document.getElementById('burgerBtn').classList.add('open');
+  // Sync notif status
+  document.getElementById('notifMenuSub').textContent =
+    state.notifEnabled ? 'Enabled ✓' : 'Tap to enable';
+}
+function closeMenu(){
+  document.getElementById('menuDrawer').classList.remove('open');
+  document.getElementById('menuOverlay').classList.remove('open');
+  document.getElementById('burgerBtn').classList.remove('open');
+}
+
+// ── UNIFIED SWIPE BANNER (v1.4.1) ──
+// Handles both green (taken) and amber (undo).
+// Swipe up dismisses — page behind does not scroll.
+// Auto-expires after 6s with a visible progress bar.
+let bannerTimer = null;
+let bannerSwipeStartY = 0;
+let bannerCurrentY = 0;
+let bannerDismissed = false;
+
+function showBanner(icon, title, sub, colour) {
+  const b   = document.getElementById('swipeBanner');
+  const bar = document.getElementById('bannerBar');
+
+  // Reset state
+  bannerDismissed = false;
+  b.className = 'swipe-banner';           // clear all modifiers
+  b.classList.add(colour);               // 'green' or 'amber'
+  b.style.transform = '';               // let CSS handle it
+
+  document.getElementById('bannerIcon').textContent  = icon;
+  document.getElementById('bannerTitle').textContent = title;
+  document.getElementById('bannerSub').textContent   = sub;
+
+  // Restart progress bar animation
+  bar.style.animation = 'none';
+  bar.offsetHeight;                      // force reflow to restart
+  bar.style.animation = '';
+
+  // Show
+  void b.offsetHeight;
+  b.classList.add('show');
+
+  // Auto-dismiss
+  clearTimeout(bannerTimer);
+  bannerTimer = setTimeout(() => dismissBanner(), 6000);
+}
+
+function dismissBanner() {
+  if (bannerDismissed) return;
+  bannerDismissed = true;
+  clearTimeout(bannerTimer);
+  const b = document.getElementById('swipeBanner');
+  b.classList.add('dismissing');
+  setTimeout(() => { b.className = 'swipe-banner'; }, 320);
+}
+
+// Touch handling for swipe banner — registered inside init() once DOM is ready
+
+// ── CLOCK ──
+function updateClock(){
+  const now=new Date();
+  document.getElementById('orbClock').textContent=
+    `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+  document.getElementById('orbDate').textContent=
+    now.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+  updateCountdown(now);
+  updatePillStatus(now);
+  updateRing(now);
+}
+function updateRing(now){
+  const[rh,rm]=state.reminderTime.split(':').map(Number);
+  const remTotal=rh*60+rm, nowTotal=now.getHours()*60+now.getMinutes();
+  const progress=state.taken?1:(nowTotal<=remTotal?nowTotal/remTotal:1);
+  const circ=2*Math.PI*140;
+  const ring=document.getElementById('orbRing');
+  ring.style.strokeDasharray=circ;
+  ring.style.strokeDashoffset=circ*(1-Math.min(1,Math.max(0,progress)));
+}
+function updateCountdown(now){
+  const[rh,rm]=state.reminderTime.split(':').map(Number);
+  let target=new Date(now);target.setHours(rh,rm,0,0);
+  let label='Next dose due in';
+  if(state.taken){target.setDate(target.getDate()+1);label='Next dose due tomorrow in';}
+  else if(target<=now) target.setDate(target.getDate()+1);
+  document.getElementById('orbCdLabel').textContent=label;
+  const diff=Math.max(0,Math.floor((target-now)/1000));
+  document.getElementById('cdH').textContent=String(Math.floor(diff/3600)).padStart(2,'0');
+  document.getElementById('cdM').textContent=String(Math.floor((diff%3600)/60)).padStart(2,'0');
+  document.getElementById('cdS').textContent=String(diff%60).padStart(2,'0');
+}
+function updatePillStatus(now){
+  const wasEarly=state.taken && state.todayEvents.some(ev=>ev.type==='taken'&&ev.early);
+  const wrap=document.getElementById('orbCard').closest('.orb-wrap');
+
+  if(state.taken){
+    document.body.classList.remove('status-alert','status-early');
+    document.body.classList.add(wasEarly?'status-early':'status-taken');
+    // Glow already set by updateStatusOrb — don't overwrite
+    return;
+  }
+
+  document.body.classList.remove('status-taken','status-early');
+  const[rh,rm]=state.reminderTime.split(':').map(Number);
+  const remMins=rh*60+rm,nowMins=now.getHours()*60+now.getMinutes();
+  const inWindow = nowMins>=remMins-180;
+
+  if(inWindow){
+    document.body.classList.add('status-alert');
+    // Ambient glow only in the alert window
+    wrap.classList.remove('glow-green','glow-amber');
+    wrap.classList.add('glow-red');
+  } else {
+    document.body.classList.remove('status-alert');
+    wrap.classList.remove('glow-green','glow-red','glow-amber');
+  }
+}
+function updateStatusOrb(){
+  const orb=document.getElementById('orbCard');
+  const wrap=orb.closest('.orb-wrap');
+  const label=document.getElementById('orbStatusLabel');
+  const tlbl=document.getElementById('orbTakenAt');
+  const btn=document.getElementById('mainBtn');
+  const undo=document.getElementById('undoBtn');
+
+  // Detect if today's taken event was marked early
+  const wasEarly=state.taken && state.todayEvents.some(ev=>ev.type==='taken'&&ev.early);
+
+  // Set ambient glow colour on wrap
+  wrap.classList.remove('glow-green','glow-red','glow-amber');
+  if(state.taken) wrap.classList.add(wasEarly?'glow-amber':'glow-green');
+  else            wrap.classList.add('glow-red');
+
+  if(state.taken){
+    orb.className='orb '+(wasEarly?'early':'taken');
+    label.textContent=wasEarly?'Taken Early ⚠':'Medication Taken ✓';
+    tlbl.textContent=state.takenAt?`Taken at ${fmtTime(new Date(state.takenAt))}`:' ';
+  } else {
+    orb.className='orb not-taken';
+    label.textContent='Not Yet Taken';
+    tlbl.textContent=' ';
+  }
+  btn.style.display=state.taken?'none':'block';
+  undo.style.display=state.taken?'block':'none';
+}
+
+// renderMedList defined below in v1.7 features section with structured fields
+
+function renderHistory(){
+  const hist=getHistory(),el=document.getElementById('historyList');
+  let html='';
+  if(state.todayEvents&&state.todayEvents.length) html+=buildDayRow({date:todayStr(),taken:state.taken,takenAt:state.takenAt,events:state.todayEvents,isToday:true});
+  hist.slice(0,14).forEach(h=>{html+=buildDayRow(h);});
+  el.innerHTML=html||'<div class="history-empty">No history yet.</div>';
+  renderHeatmap();
+  renderStreak();
+}
+function buildDayRow(h){
+  const d=new Date((h.date||todayStr())+'T12:00:00');
+  const dateLabel=d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+  const todayBadge=h.isToday?' <span style="font-size:.62rem;color:var(--blue);font-weight:700;letter-spacing:.06em">TODAY</span>':'';
+
+  // Check if any taken event was marked early
+  const events=h.events||[];
+  const hasEarly=events.some(ev=>ev.type==='taken'&&ev.early);
+  const dotClass=h.taken?'taken':((events.length)?'partial':'missed');
+  const statusColor=h.taken?'var(--green)':((events.length&&!h.taken)?'var(--amber)':'var(--red)');
+  const earlyMark=h.taken&&hasEarly?' <span style="color:var(--amber);font-size:.78rem;font-weight:700" title="Taken early">⚠</span>':'';
+  const statusText=h.taken?(hasEarly?'Taken early':'Taken'):((events.length&&!h.taken)?'Undone':'Missed');
+  const timeStr=h.taken&&h.takenAt?fmtTime(new Date(h.takenAt)):'—';
+
+  let evHtml='';
+  if(events.length){
+    evHtml='<div class="history-events">'+events.map(ev=>{
+      const isTaken=ev.type==='taken';
+      const isEarly=isTaken&&ev.early;
+      const isUndo=ev.type==='undo';
+      let badge='';
+      if(isEarly) badge='<div class="ev-badge early">! Early</div>';
+      else if(isTaken) badge='<div class="ev-badge taken">Taken</div>';
+      else if(isUndo)  badge='<div class="ev-badge undo">Undo</div>';
+      const label=isEarly?'Taken early':isTaken?'Marked as taken':'Undone';
+      const dotClass=isUndo?'ev-undo':'ev-taken';
+      const noteHtml=isEarly&&ev.earlyNote?
+        `<div class="early-note" style="width:100%;margin-top:3px;padding-left:18px">"${esc(ev.earlyNote)}"</div>`:'';
+      return `<div class="history-event" style="flex-wrap:wrap">
+        <div class="ev-dot ${dotClass}"></div>
+        <div class="ev-time">${fmtTime(new Date(ev.at))}</div>
+        <div class="ev-label">${label}</div>
+        ${badge}
+        ${noteHtml}
+      </div>`;
+    }).join('')+'</div>';
+  }
+
+  return `<div class="history-row"><div class="history-main">
+    <div class="history-dot ${dotClass}"></div>
+    <div class="history-date">${dateLabel}${todayBadge}</div>
+    <div class="history-status" style="color:${statusColor}">${statusText}${earlyMark}</div>
+    <div class="history-time">${timeStr}</div>
+  </div>${evHtml}</div>`;
+}
+
+// ── ACTIONS ──
+function handleTakeMed(){
+  const now=new Date();
+  const[rh,rm]=state.reminderTime.split(':').map(Number);
+  const remMins=rh*60+rm,nowMins=now.getHours()*60+now.getMinutes();
+  const diff=nowMins-remMins; // negative = before due time
+
+  if(state.taken){showToast('✅ Already marked as taken today!','green');return;}
+
+  const earlyWindow = state.earlyWindow || 30;
+  if(diff < -earlyWindow){
+    // More than 30 min early — show override modal instead of blocking
+    const minsEarly=Math.abs(diff);
+    const h=Math.floor(minsEarly/60),m=minsEarly%60;
+    const timeStr=h>0?`${h}h ${m}m`:m===1?`${m} minute`:`${m} minutes`;
+    document.getElementById('earlyTimeLeft').textContent=timeStr;
+    document.getElementById('earlyNoteInput').value='';
+    document.getElementById('earlyModal').classList.add('open');
+    return;
+  }
+
+  // On time or within grace window — take normally
+  confirmTake(false, null);
+}
+
+function handleEarlyOverlayClick(e){
+  // Close if clicking the overlay background, not the sheet itself
+  if(e.target===document.getElementById('earlyModal')) closeEarlyModal();
+}
+
+function closeEarlyModal(){
+  document.getElementById('earlyModal').classList.remove('open');
+}
+
+// confirmEarlyTake is defined in the Advanced Mode section below
+// and handles both simple and advanced mode cases
+
+function confirmTake(isEarly, earlyNote){
+  haptic(isEarly ? 'medium' : 'success');
+  const now=new Date();
+  const iso=now.toISOString();
+  state.taken=true;state.takenAt=iso;
+  const event={type:'taken',at:iso};
+  if(isEarly) event.early=true;
+  if(earlyNote) event.earlyNote=earlyNote;
+  state.todayEvents.push(event);
+  saveState();updateStatusOrb();scheduleNotif();renderHistory();
+  if(isEarly){
+    showBanner('⏰',`Taken early at ${fmtTime(now)}`,'Swipe up to dismiss','amber');
+  } else {
+    showBanner('✓',`Medication taken at ${fmtTime(now)}`,'Swipe up to dismiss','green');
+  }
+}
+function undoTaken(){
+  haptic('light');
+  const iso=new Date().toISOString();
+  state.todayEvents.push({type:'undo',at:iso});
+  state.taken=false;state.takenAt=null;
+  saveState();updateStatusOrb();renderHistory();
+  // Unified amber banner — same behaviour as green, consistent
+  showBanner('↩', 'Marked as not taken', 'Swipe up to dismiss', 'amber');
+}
+
+// ── NOTIFICATIONS ──
+function enableNotifications(){
+  if(!('Notification' in window)){showToast('Not supported in this browser.','amber');return;}
+  Notification.requestPermission().then(p=>{
+    if(p==='granted'){
+      state.notifEnabled=true;saveState();
+      document.getElementById('notifHint').style.display='none';
+      document.getElementById('notifMenuSub').textContent='Enabled ✓';
+      scheduleNotif();showToast('🔔 Notifications enabled!','green');
+    }else showToast('🔕 Permission denied.','amber');
+  });
+}
+function scheduleNotif(){
+  if(!state.notifEnabled||Notification.permission!=='granted')return;
+  if(notifTimer)clearTimeout(notifTimer);
+  const now=new Date();
+  const[rh,rm]=state.reminderTime.split(':').map(Number);
+  let t=new Date(now);t.setHours(rh,rm,0,0);
+  if(t<=now||state.taken)t.setDate(t.getDate()+1);
+  notifTimer=setTimeout(()=>{
+    if(!state.taken)new Notification('MedTime 💊',{body:`Time for your medication! Due at ${fmt12(state.reminderTime)}`});
+    scheduleNotif();
+  },t-now);
+}
+
+// ── CHANGELOG ──
+function openChangelog(){
+  document.getElementById('changelogOverlay').classList.add('open');
+  document.getElementById('changelogPanel').classList.add('open');
+}
+function closeChangelog(){
+  document.getElementById('changelogOverlay').classList.remove('open');
+  document.getElementById('changelogPanel').classList.remove('open');
+}
+
+// ── SETTINGS ──
+let tempMeds=[];
+function openSettings(){
+  tempMeds=JSON.parse(JSON.stringify(state.meds));
+  document.getElementById('timeInput').value=state.reminderTime;
+  document.getElementById('earlyWindowInput').value=String(state.earlyWindow||30);
+  document.getElementById('carerPinSetInput').value=state.carerPin||'';
+  rebuildMedEditor();renderEmojiPicker();
+  document.getElementById('settingsOverlay').classList.add('open');
+  document.getElementById('settingsPanel').classList.add('open');
+}
+function closeSettings(){
+  document.getElementById('settingsOverlay').classList.remove('open');
+  document.getElementById('settingsPanel').classList.remove('open');
+}
+function rebuildMedEditor(){
+  document.getElementById('medEditorList').innerHTML=tempMeds.map((m,i)=>`
+    <div class="med-editor-item">
+      <div class="med-editor-row">
+        <select class="med-input" style="max-width:64px;flex:none" onchange="tempMeds[${i}].icon=this.value">
+          ${EMOJIS.map(e=>`<option value="${e}"${(m.icon||'💊')===e?' selected':''}>${e}</option>`).join('')}
+        </select>
+        <input class="med-input" type="text" placeholder="Medication name" value="${esc(m.name)}" oninput="tempMeds[${i}].name=this.value">
+        <button class="remove-med-btn" onclick="removeMed(${i})">✕</button>
+      </div>
+      <div class="med-editor-row">
+        <input class="med-input" type="text" placeholder="Dosage (e.g. 10mg, 2 tablets)" value="${esc(m.dosage||'')}" oninput="tempMeds[${i}].dosage=this.value">
+      </div>
+      <div class="med-struct-row">
+        <select class="med-select" onchange="tempMeds[${i}].form=this.value">
+          <option value="">Form…</option>
+          ${['Tablet','Capsule','Liquid','Patch','Injection','Inhaler','Drops','Cream','Other'].map(f=>`<option value="${f}"${m.form===f?' selected':''}>${f}</option>`).join('')}
+        </select>
+        <select class="med-select" onchange="tempMeds[${i}].route=this.value">
+          <option value="">Route…</option>
+          ${['Oral','Topical','Inhaled','Sublingual','Injection','Eye/Ear','Other'].map(r=>`<option value="${r}"${m.route===r?' selected':''}>${r}</option>`).join('')}
+        </select>
+      </div>
+      <div class="med-struct-row">
+        <select class="med-select" onchange="tempMeds[${i}].food=this.value">
+          <option value="">Food…</option>
+          ${['With food','Without food','Before meals','After meals','No restriction'].map(f=>`<option value="${f}"${m.food===f?' selected':''}>${f}</option>`).join('')}
+        </select>
+        <select class="med-select" onchange="tempMeds[${i}].timing=this.value">
+          <option value="">Timing…</option>
+          ${['As prescribed','At a specific time','30 min before bed','With plenty of water','Swallow whole'].map(t=>`<option value="${t}"${m.timing===t?' selected':''}>${t}</option>`).join('')}
+        </select>
+      </div>
+      <div class="med-editor-row">
+        <input class="med-input" type="text" placeholder="Notes / special instructions (optional)" value="${esc(m.notes||'')}" oninput="tempMeds[${i}].notes=this.value">
+      </div>
+    </div>`).join('');
+}
+function addMedField(){tempMeds.push({id:Date.now(),name:'',dosage:'',icon:'💊',notes:''});rebuildMedEditor();}
+function removeMed(i){tempMeds.splice(i,1);rebuildMedEditor();}
+function renderEmojiPicker(){
+  document.getElementById('emojiRow').innerHTML=EMOJIS.map(e=>
+    `<div class="emoji-opt${state.appIcon===e?' selected':''}" onclick="selectEmoji('${e}',this)">${e}</div>`).join('');
+}
+function selectEmoji(e,el){state.appIcon=e;document.querySelectorAll('.emoji-opt').forEach(x=>x.classList.remove('selected'));el.classList.add('selected');}
+function saveSettings(){
+  const t=document.getElementById('timeInput').value;
+  if(!t){showToast('⚠️ Please set a valid time.','amber');return;}
+  for(const m of tempMeds)if(!m.name.trim()){showToast('⚠️ Each medication needs a name.','amber');return;}
+  state.reminderTime=t;
+  state.meds=tempMeds.filter(m=>m.name.trim());
+  // Early window
+  const ew = parseInt(document.getElementById('earlyWindowInput').value);
+  state.earlyWindow = isNaN(ew) ? 30 : ew;
+  // Caregiver PIN
+  const pin = document.getElementById('carerPinSetInput').value.trim();
+  if(pin) {
+    if(!/^\d{4}$/.test(pin)){showToast('⚠️ PIN must be exactly 4 digits.','amber');return;}
+    state.carerPin = pin;
+  }
+  saveState();document.getElementById('notifTime').textContent=fmt12(t);
+  scheduleNotif();renderMedList();closeSettings();
+  showToast('✓ Settings saved!','green');
+  haptic('medium');
+}
+
+// ════════════════════════════════════════
+// ADVANCED MODE — v1.6
+// ════════════════════════════════════════
+
+const ADV_KEY  = 'medtime_adv_state';
+const ADV_HIST = 'medtime_adv_history';
+
+const SLOT_DEFAULTS = [
+  { id:'morning',  name:'Morning',  emoji:'🌅', time:'08:00', meds:[] },
+  { id:'lunch',    name:'Lunch',    emoji:'☀️',  time:'12:00', meds:[] },
+  { id:'dinner',   name:'Dinner',   emoji:'🌆', time:'18:00', meds:[] },
+  { id:'bedtime',  name:'Bedtime',  emoji:'🌙', time:'21:45', meds:[] },
+];
+
+// Advanced state — separate from simple state
+let advState = {
+  slots: JSON.parse(JSON.stringify(SLOT_DEFAULTS)),  // slot configs
+  today: {},     // { morning:{taken,takenAt,events[]}, ... }
+  lastResetDate: todayStr(),
+};
+
+function loadAdvState() {
+  try {
+    const s = localStorage.getItem(ADV_KEY);
+    if (s) {
+      const parsed = JSON.parse(s);
+      advState = { ...advState, ...parsed };
+      // Ensure all slots exist
+      SLOT_DEFAULTS.forEach(def => {
+        if (!advState.slots.find(sl => sl.id === def.id)) advState.slots.push({...def});
+        if (!advState.today[def.id]) advState.today[def.id] = {taken:false, takenAt:null, events:[]};
+      });
+    } else {
+      // Init today tracking
+      SLOT_DEFAULTS.forEach(def => {
+        advState.today[def.id] = {taken:false, takenAt:null, events:[]};
+      });
+    }
+  } catch(e) {}
+
+  if (advState.lastResetDate !== todayStr()) {
+    archiveAdvDay();
+    advState.slots.forEach(sl => {
+      advState.today[sl.id] = {taken:false, takenAt:null, events:[]};
+    });
+    advState.lastResetDate = todayStr();
+    saveAdvState();
+  }
+}
+
+function saveAdvState() { localStorage.setItem(ADV_KEY, JSON.stringify(advState)); }
+
+function archiveAdvDay() {
+  const hist = getAdvHistory();
+  hist.unshift({ date: advState.lastResetDate, today: JSON.parse(JSON.stringify(advState.today)) });
+  localStorage.setItem(ADV_HIST, JSON.stringify(hist.slice(0, 30)));
+}
+function getAdvHistory() { try { return JSON.parse(localStorage.getItem(ADV_HIST))||[]; } catch { return []; } }
+
+// ── MODE TOGGLE ──
+function toggleAdvancedMode() {
+  state.advancedMode = !state.advancedMode;
+  saveState();
+  applyMode();
+  closeMenu();
+  showToast(state.advancedMode ? '🏥 Advanced Mode on' : '💊 Simple Mode on', 'green');
+}
+
+function applyMode() {
+  const isAdv = !!state.advancedMode;
+  document.body.classList.toggle('advanced-mode', isAdv);
+  document.getElementById('advModeToggle').classList.toggle('on', isAdv);
+  document.getElementById('modeBadge').textContent = isAdv ? 'Advanced' : 'Simple';
+  document.getElementById('advModeSub').textContent = isAdv ? 'Currently in advanced mode' : 'Switch to scheduled dosing';
+  document.getElementById('advSlotSettingsBtn').style.display = isAdv ? 'flex' : 'none';
+
+  if (isAdv) {
+    renderSlotGrid();
+    renderAdvHistory();
+  }
+}
+
+// ── SLOT RENDERING ──
+let advCountdownInterval = null;
+
+function renderSlotGrid() {
+  const grid = document.getElementById('slotGrid');
+  const now     = new Date();
+  const nowMins = now.getHours() * 60 + now.getMinutes();
+
+  // Determine the single "next" slot — earliest untaken slot from now
+  // If all future slots taken, find the earliest overdue untaken
+  let nextSlotId = null;
+  let bestFutureDiff = Infinity;
+  let bestOverdueDiff = Infinity; // least overdue
+
+  advState.slots.forEach(sl => {
+    const st = advState.today[sl.id] || {};
+    if (st.taken) return;
+    const [sh, sm] = sl.time.split(':').map(Number);
+    const slotMins = sh * 60 + sm;
+    const diff = slotMins - nowMins; // positive = future, negative = past/overdue
+    if (diff >= -30) {
+      // Within 30min before or any time after → due/overdue
+      // Actually: treat >= -30 as "current/overdue" — pick the least overdue
+      if (diff < bestFutureDiff) { bestFutureDiff = diff; nextSlotId = sl.id; }
+    } else {
+      // Future (more than 30min away)
+      if (diff < bestFutureDiff) { bestFutureDiff = diff; nextSlotId = sl.id; }
+    }
+  });
+
+  // If no next found by above (e.g. all taken), nextSlotId stays null
+
+  // Recalc properly: find the soonest untaken slot going forward from now
+  nextSlotId = null;
+  let soonestDiff = Infinity;
+  advState.slots.forEach(sl => {
+    const st = advState.today[sl.id] || {};
+    if (st.taken) return;
+    const [sh, sm] = sl.time.split(':').map(Number);
+    const slotMins = sh * 60 + sm;
+    // For untaken overdue slots: diff is negative but we want them first
+    // Sort: overdue first (most negative last → most negative = most urgent)
+    // Actually: next = smallest future diff first; if all overdue, smallest absolute diff
+    const diff = slotMins - nowMins;
+    // Priority: overdue first (negative diff), then future
+    const sortKey = diff < 0 ? diff - 100000 : diff; // overdue sorts lower
+    if (sortKey < soonestDiff) { soonestDiff = sortKey; nextSlotId = sl.id; }
+  });
+
+  grid.innerHTML = advState.slots.map(sl => {
+    const st      = advState.today[sl.id] || {taken:false, takenAt:null, events:[]};
+    const [sh, sm] = sl.time.split(':').map(Number);
+    const slotMins = sh * 60 + sm;
+    const diff     = nowMins - slotMins; // positive = past/overdue, negative = future
+    const isNext   = sl.id === nextSlotId;
+
+    let cardClass   = 'slot-card';
+    let statusText  = '';
+    let missedBadge = '';
+    let cdHtml      = '';
+    let btnHtml     = '';
+
+    if (st.taken) {
+      // ── TAKEN — ultra-compact strip ──
+      const wasEarly = st.events.some(e => e.type==='taken' && e.early);
+      cardClass  += wasEarly ? ' slot-early' : ' slot-taken';
+      const takenTime = st.takenAt ? fmtTime(new Date(st.takenAt)) : '';
+      return `<div class="${cardClass}" id="slot-${sl.id}">
+        <div class="${wasEarly?'slot-early-row':'slot-taken-row'}">
+          <div class="${wasEarly?'slot-early-check':'slot-taken-check'}">✓</div>
+          <div class="slot-taken-info">
+            <div class="slot-taken-name">${sl.emoji} ${sl.name}${wasEarly?' · Early':''}</div>
+            <div class="slot-taken-time">${takenTime}</div>
+          </div>
+          <button class="slot-taken-undo" onclick="undoSlot('${sl.id}')">↩ Undo</button>
+        </div>
+      </div>`;
+    } else if (diff > 30) {
+      // ── MISSED / OVERDUE — urgent ──
+      cardClass  += isNext ? ' slot-not-taken' : ' slot-not-taken';
+      statusText  = `Overdue by ${fmtMins(diff)}`;
+      missedBadge = `<div class="slot-missed-badge">⚠ Missed</div>`;
+      btnHtml     = `<button class="slot-btn slot-btn-take" onclick="takeSlot('${sl.id}')">✓ Take ${sl.name} Now</button>`;
+
+    } else if (diff >= -30) {
+      // ── DUE NOW (within 30min window) ──
+      cardClass  += ' slot-not-taken';
+      statusText  = 'Due now';
+      btnHtml     = `<button class="slot-btn slot-btn-take" onclick="takeSlot('${sl.id}')">✓ Take ${sl.name}</button>`;
+
+    } else if (isNext) {
+      // ── NEXT UPCOMING — the star ──
+      cardClass  += ' slot-next';
+      const minsTil = -diff;
+      statusText  = `Due in ${fmtMins(minsTil)}`;
+      cdHtml      = `<div class="slot-countdown" id="slot-cd-${sl.id}"></div>`;
+      btnHtml     = `<button class="slot-btn slot-btn-future" onclick="takeSlotEarly('${sl.id}')">Taking early? Tap here…</button>`;
+
+    } else {
+      // ── FUTURE — quiet ──
+      cardClass  += ' slot-pending';
+      statusText  = fmt12(sl.time);
+      btnHtml     = `<button class="slot-btn slot-btn-future" onclick="takeSlotEarly('${sl.id}')">Take early…</button>`;
+    }
+
+    const medChips = sl.meds.length
+      ? sl.meds.map(m =>
+          `<div class="slot-med-chip">${esc(m.icon||'💊')} ${esc(m.name)}${m.dosage?' · '+esc(m.dosage):''}</div>`
+        ).join('')
+      : '<div class="slot-med-chip" style="color:var(--text-dim);opacity:0.6">No medications set</div>';
+
+    return `<div class="${cardClass}" id="slot-${sl.id}">
+      <div class="slot-header">
+        <div class="slot-name">${sl.emoji} ${sl.name}</div>
+        <div class="slot-dot"></div>
+      </div>
+      <div class="slot-time-big">${fmt12(sl.time)}</div>
+      <div class="slot-status-text">${statusText}</div>
+      ${missedBadge}
+      ${cdHtml}
+      <div class="slot-meds">${medChips}</div>
+      ${btnHtml}
+    </div>`;
+  }).join('');
+
+  updateAdvNextBanner(now);
+
+  // Live countdowns — tick the next slot's in-card countdown + banner
+  if (advCountdownInterval) clearInterval(advCountdownInterval);
+  advCountdownInterval = setInterval(() => {
+    if (!state.advancedMode) { clearInterval(advCountdownInterval); return; }
+    const n = new Date();
+    const nm = n.getHours() * 60 + n.getMinutes();
+    // Update per-slot countdown elements
+    advState.slots.forEach(sl => {
+      const el = document.getElementById(`slot-cd-${sl.id}`);
+      if (!el) return;
+      const [sh, sm] = sl.time.split(':').map(Number);
+      const diff = (sh * 60 + sm) - nm;
+      if (diff <= 0) {
+        // Slot became due — re-render the grid
+        renderSlotGrid(); return;
+      }
+      const totalSecs = diff * 60 - n.getSeconds();
+      const h = Math.floor(totalSecs/3600);
+      const m = Math.floor((totalSecs%3600)/60);
+      const s = totalSecs % 60;
+      el.textContent = h > 0
+        ? `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`
+        : `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    });
+    updateAdvNextBanner(n);
+  }, 1000);
+}
+
+function updateAdvNextBanner(now) {
+  const nowMins = now.getHours() * 60 + now.getMinutes();
+  const allDone = advState.slots.every(sl => (advState.today[sl.id]||{}).taken);
+
+  const banner = document.getElementById('advNextBanner');
+  const icon   = document.getElementById('advNextIcon');
+  const val    = document.getElementById('advNextValue');
+  const cd     = document.getElementById('advNextCd');
+
+  if (allDone) {
+    banner.classList.add('all-done');
+    icon.textContent  = '✅';
+    val.textContent   = 'All doses taken today — great job!';
+    cd.textContent    = '';
+    return;
+  }
+  banner.classList.remove('all-done');
+
+  // Find next untaken slot
+  let nextSlot = null, nextDiff = Infinity;
+  advState.slots.forEach(sl => {
+    if ((advState.today[sl.id]||{}).taken) return;
+    const [sh, sm] = sl.time.split(':').map(Number);
+    const slotMins = sh * 60 + sm;
+    let diff = slotMins - nowMins;
+    if (diff < 0) diff += 1440; // wrap overnight
+    if (diff < nextDiff) { nextDiff = diff; nextSlot = sl; }
+  });
+
+  if (!nextSlot) return;
+  icon.textContent = nextSlot.emoji;
+  val.textContent  = `${nextSlot.name} — ${fmt12(nextSlot.time)}`;
+
+  const secs = nextDiff * 60 - now.getSeconds();
+  const h = Math.floor(secs / 3600);
+  const m = Math.floor((secs % 3600) / 60);
+  const s = secs % 60;
+  cd.textContent = h > 0
+    ? `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`
+    : `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+}
+
+// ── SLOT ACTIONS ──
+function takeSlot(slotId) {
+  haptic('success');
+  const now = new Date();
+  const iso = now.toISOString();
+  if (!advState.today[slotId]) advState.today[slotId] = {taken:false, takenAt:null, events:[]};
+  advState.today[slotId].taken   = true;
+  advState.today[slotId].takenAt = iso;
+  advState.today[slotId].events.push({type:'taken', at:iso});
+  saveAdvState();
+  renderSlotGrid();
+  renderAdvHistory();
+  const sl = advState.slots.find(s => s.id===slotId);
+  showBanner('✓', `${sl.emoji} ${sl.name} taken at ${fmtTime(now)}`, 'Swipe up to dismiss', 'green');
+}
+
+function takeSlotEarly(slotId) {
+  const sl = advState.slots.find(s => s.id===slotId);
+  const now = new Date();
+  const [sh, sm] = sl.time.split(':').map(Number);
+  const slotMins = sh * 60 + sm;
+  const nowMins  = now.getHours() * 60 + now.getMinutes();
+  const minsEarly = slotMins - nowMins;
+  const timeStr = minsEarly > 60
+    ? `${Math.floor(minsEarly/60)}h ${minsEarly%60}m`
+    : `${minsEarly} minutes`;
+
+  // Reuse the early modal — store which slot we're taking
+  pendingEarlySlot = slotId;
+  document.getElementById('earlyTimeLeft').textContent = timeStr;
+  document.getElementById('earlyNoteInput').value = '';
+  document.getElementById('earlyModal').classList.add('open');
+}
+
+let pendingEarlySlot = null;
+
+// Override confirmEarlyTake to handle both simple + advanced
+function confirmEarlyTake() {
+  const note = document.getElementById('earlyNoteInput').value.trim();
+  closeEarlyModal();
+  if (pendingEarlySlot && state.advancedMode) {
+    // Advanced mode early take
+    const slotId = pendingEarlySlot;
+    pendingEarlySlot = null;
+    const now = new Date();
+    const iso = now.toISOString();
+    if (!advState.today[slotId]) advState.today[slotId] = {taken:false, takenAt:null, events:[]};
+    const ev = {type:'taken', at:iso, early:true};
+    if (note) ev.earlyNote = note;
+    advState.today[slotId].taken   = true;
+    advState.today[slotId].takenAt = iso;
+    advState.today[slotId].events.push(ev);
+    saveAdvState();
+    renderSlotGrid();
+    renderAdvHistory();
+    const sl = advState.slots.find(s => s.id===slotId);
+    showBanner('⏰', `${sl.emoji} ${sl.name} taken early`, 'Swipe up to dismiss', 'amber');
+  } else {
+    pendingEarlySlot = null;
+    confirmTake(true, note||null);
+  }
+}
+
+function undoSlot(slotId) {
+  haptic('light');
+  const iso = new Date().toISOString();
+  if (!advState.today[slotId]) return;
+  advState.today[slotId].events.push({type:'undo', at:iso});
+  advState.today[slotId].taken   = false;
+  advState.today[slotId].takenAt = null;
+  saveAdvState();
+  renderSlotGrid();
+  renderAdvHistory();
+  showBanner('↩', 'Marked as not taken', 'Swipe up to dismiss', 'amber');
+}
+
+// ── ADVANCED HISTORY ──
+function renderAdvHistory() {
+  const hist = getAdvHistory();
+  const el   = document.getElementById('advHistoryList');
+  let html = '';
+
+  // Today live
+  const anyTodayActivity = advState.slots.some(sl => {
+    const t = advState.today[sl.id]||{};
+    return t.taken || (t.events && t.events.length);
+  });
+  if (anyTodayActivity) html += buildAdvDayRow(todayStr(), advState.today, true);
+
+  hist.slice(0, 14).forEach(h => { html += buildAdvDayRow(h.date, h.today, false); });
+
+  el.innerHTML = html || '<div class="history-empty">No history yet.</div>';
+}
+
+function buildAdvDayRow(dateStr, todayData, isToday) {
+  const d = new Date(dateStr + 'T12:00:00');
+  const dateLabel = d.toLocaleDateString('en-US', {weekday:'short', month:'short', day:'numeric'});
+  const todayBadge = isToday ? ' <span style="font-size:.62rem;color:var(--blue);font-weight:700;letter-spacing:.06em">TODAY</span>' : '';
+
+  const takenCount  = advState.slots.filter(sl => (todayData[sl.id]||{}).taken).length;
+  const totalSlots  = advState.slots.length;
+  const statusColor = takenCount === totalSlots ? 'var(--green)' : takenCount > 0 ? 'var(--amber)' : 'var(--red)';
+  const statusText  = `${takenCount}/${totalSlots} taken`;
+
+  let slotsHtml = '<div class="history-events">';
+  advState.slots.forEach(sl => {
+    const st = todayData[sl.id] || {};
+    const events = st.events || [];
+    if (!events.length && !st.taken) return;
+    slotsHtml += `<div class="adv-hist-slot-label">${sl.emoji} ${sl.name}</div>`;
+    events.forEach(ev => {
+      const isTaken = ev.type==='taken';
+      const isEarly = isTaken && ev.early;
+      const isUndo  = ev.type==='undo';
+      let badge = '';
+      if (isEarly) badge='<div class="ev-badge early">! Early</div>';
+      else if (isTaken) badge='<div class="ev-badge taken">Taken</div>';
+      else if (isUndo)  badge='<div class="ev-badge undo">Undo</div>';
+      const noteHtml = isEarly && ev.earlyNote
+        ? `<div class="early-note" style="width:100%;margin-top:3px;padding-left:18px">"${esc(ev.earlyNote)}"</div>`:'';
+      slotsHtml += `<div class="history-event" style="flex-wrap:wrap">
+        <div class="ev-dot ${isUndo?'ev-undo':'ev-taken'}"></div>
+        <div class="ev-time">${fmtTime(new Date(ev.at))}</div>
+        <div class="ev-label">${isEarly?'Taken early':isTaken?'Marked taken':'Undone'}</div>
+        ${badge}${noteHtml}
+      </div>`;
+    });
+  });
+  slotsHtml += '</div>';
+
+  return `<div class="history-row">
+    <div class="history-main">
+      <div class="history-dot ${takenCount===totalSlots?'taken':takenCount>0?'partial':'missed'}"></div>
+      <div class="history-date">${dateLabel}${todayBadge}</div>
+      <div class="history-status" style="color:${statusColor}">${statusText}</div>
+    </div>
+    ${slotsHtml}
+  </div>`;
+}
+
+// ── SLOT SETTINGS ──
+let tempSlots = [];
+
+function openSlotSettings() {
+  tempSlots = JSON.parse(JSON.stringify(advState.slots));
+  buildSlotEditor();
+  document.getElementById('slotSettingsOverlay').classList.add('open');
+  document.getElementById('slotSettingsPanel').classList.add('open');
+}
+function closeSlotSettings() {
+  document.getElementById('slotSettingsOverlay').classList.remove('open');
+  document.getElementById('slotSettingsPanel').classList.remove('open');
+}
+
+function buildSlotEditor() {
+  document.getElementById('slotEditorList').innerHTML = tempSlots.map((sl, si) => {
+    const medsHtml = sl.meds.map((m, mi) => `
+      <div class="med-editor-item" style="margin-top:6px">
+        <div class="med-editor-row">
+          <select class="med-input" style="max-width:64px;flex:none" onchange="tempSlots[${si}].meds[${mi}].icon=this.value">
+            ${EMOJIS.map(e=>`<option value="${e}"${(m.icon||'💊')===e?' selected':''}>${e}</option>`).join('')}
+          </select>
+          <input class="med-input" type="text" placeholder="Medication name" value="${esc(m.name)}"
+            oninput="tempSlots[${si}].meds[${mi}].name=this.value">
+          <button class="remove-med-btn" onclick="removeSlotMed(${si},${mi})">✕</button>
+        </div>
+        <div class="med-editor-row">
+          <input class="med-input" type="text" placeholder="Dosage (e.g. 10mg, 2 tablets)" value="${esc(m.dosage||'')}"
+            oninput="tempSlots[${si}].meds[${mi}].dosage=this.value">
+        </div>
+        <div class="med-editor-row">
+          <input class="med-input" type="text" placeholder="Instructions (e.g. Take with food)" value="${esc(m.instructions||'')}"
+            oninput="tempSlots[${si}].meds[${mi}].instructions=this.value">
+        </div>
+      </div>`).join('');
+
+    return `<div class="slot-section">
+      <div class="slot-settings-header">
+        <div class="slot-settings-icon" style="background:var(--surface2);border:1px solid var(--border)">${sl.emoji}</div>
+        <div class="slot-settings-title">${sl.name}</div>
+      </div>
+      <div class="slot-section-label">Time</div>
+      <input type="time" class="time-input" value="${sl.time}"
+        oninput="tempSlots[${si}].time=this.value" style="margin-bottom:10px">
+      <div class="slot-section-label">Medications</div>
+      <div id="slot-meds-${si}">${medsHtml}</div>
+      <button class="add-med-btn" style="margin-top:6px" onclick="addSlotMed(${si})">+ Add medication to ${sl.name}</button>
+    </div>`;
+  }).join('');
+}
+
+function addSlotMed(si) {
+  tempSlots[si].meds.push({icon:'💊', name:'', dosage:'', instructions:''});
+  buildSlotEditor();
+}
+function removeSlotMed(si, mi) {
+  tempSlots[si].meds.splice(mi, 1);
+  buildSlotEditor();
+}
+
+function saveSlotSettings() {
+  for (const sl of tempSlots) {
+    for (const m of sl.meds) {
+      if (!m.name.trim()) { showToast('⚠️ Each medication needs a name.','amber'); return; }
+    }
+    if (!sl.time) { showToast('⚠️ Each slot needs a time.','amber'); return; }
+  }
+  advState.slots = tempSlots;
+  saveAdvState();
+  renderSlotGrid();
+  closeSlotSettings();
+  showToast('✓ Schedule saved!','green');
+}
+
+// ════════════════════════════════════════
+// v1.7 FEATURES
+// ════════════════════════════════════════
+
+// ── HAPTICS ──
+function haptic(type='light'){
+  try {
+    if(!navigator||!navigator.vibrate) return;
+    const patterns={light:40,medium:80,success:[40,30,60],error:[80,40,80]};
+    const p=patterns[type]||40;
+    navigator.vibrate(p);
+  } catch(e){ /* silently ignore — haptics not supported */ }
+}
+
+// ── ONBOARDING ──
+function checkOnboarding(){
+  if(state.onboardingDone) return; // app is already visible, nothing to do
+  // Show onboarding, hide app
+  document.getElementById('onboardingOverlay').style.display='flex';
+  document.getElementById('appMain').style.display='none';
+}
+
+function hideOnboarding(){
+  document.getElementById('onboardingOverlay').style.display='none';
+  document.getElementById('appMain').style.display='block';
+}
+
+let obWhoChoice='self';
+function selectWho(who){
+  obWhoChoice = who;
+  var selfBtn  = document.getElementById('obForSelf');
+  var otherBtn = document.getElementById('obForOther');
+  if(!selfBtn || !otherBtn) return;
+  // Explicit add/remove — more reliable than toggle with boolean
+  if(who === 'self'){
+    selfBtn.classList.add('selected');
+    otherBtn.classList.remove('selected');
+  } else {
+    otherBtn.classList.add('selected');
+    selfBtn.classList.remove('selected');
+  }
+  haptic('light');
+}
+
+function obNext(step){
+  try {
+    document.querySelectorAll('.ob-step').forEach(s=>s.classList.remove('active'));
+    const target=document.getElementById(`ob-step-${step}`);
+    if(target) target.classList.add('active');
+    haptic('light');
+  } catch(e){ console.warn('obNext error:',e); }
+}
+
+function skipOnboarding(){
+  state.onboardingDone=true;
+  saveState();
+  hideOnboarding();
+  haptic('medium');
+}
+
+function finishOnboarding(){
+  const name=document.getElementById('obName').value.trim();
+  const time=document.getElementById('obTime').value;
+  const medName=document.getElementById('obMedName').value.trim();
+  const medDose=document.getElementById('obMedDose').value.trim();
+  if(name) state.userName=name;
+  state.whoFor=obWhoChoice;
+  if(time) state.reminderTime=time;
+  if(medName){
+    state.meds=[{id:Date.now(),name:medName,dosage:medDose,icon:'💊',notes:'',form:'',route:'',food:'',timing:''}];
+  }
+  state.onboardingDone=true;
+  saveState();
+  hideOnboarding();
+  renderMedList();
+  document.getElementById('notifTime').textContent=fmt12(state.reminderTime);
+  haptic('success');
+  showToast(`Welcome${name?' '+name:''}! MedTime is ready. ✓`,'green');
+}
+
+// ── HEATMAP ──
+function renderHeatmap(){
+  const grid=document.getElementById('heatmapGrid');
+  if(!grid) return;
+  const hist=getHistory();
+  const histMap={};
+  hist.forEach(h=>{ histMap[h.date]={taken:h.taken,events:h.events||[]}; });
+  // Today
+  histMap[todayStr()]={taken:state.taken,events:state.todayEvents||[]};
+
+  const days=28;
+  const today=new Date();
+  let html='';
+  for(let i=days-1;i>=0;i--){
+    const d=new Date(today);
+    d.setDate(d.getDate()-i);
+    const ds=d.toLocaleDateString('en-CA');
+    const isToday=ds===todayStr();
+    const dayLabel=d.getDate();
+    const rec=histMap[ds];
+    let cls='hm-day';
+    let title='';
+    if(isToday){cls+=' hm-today';title='Today';}
+    if(rec){
+      const hasEarly=(rec.events||[]).some(e=>e.type==='taken'&&e.early);
+      if(rec.taken&&hasEarly){cls+=' hm-early';title=(title||ds)+' — Taken early';}
+      else if(rec.taken){cls+=' hm-taken';title=(title||ds)+' — Taken';}
+      else if((rec.events||[]).length){cls+=' hm-missed';title=(title||ds)+' — Missed (activity recorded)';}
+      else{cls+=' hm-missed';title=(title||ds)+' — Missed';}
+    } else if(i===0){
+      // today, no data yet
+      title='Today';
+    }
+    html+=`<div class="${cls}" title="${title}">${dayLabel}</div>`;
+  }
+  grid.innerHTML=html;
+}
+
+// ── STREAK & ADHERENCE ──
+function renderStreak(){
+  const hist=getHistory().slice(0,30);
+  const today={taken:state.taken,date:todayStr()};
+  const all=[today,...hist];
+
+  // Current streak
+  let streak=0;
+  for(const d of all){
+    if(d.taken) streak++;
+    else break;
+  }
+
+  // 28-day adherence %
+  const last28=all.slice(0,28);
+  const taken28=last28.filter(d=>d.taken).length;
+  const pct=last28.length?Math.round((taken28/last28.length)*100):0;
+
+  const banner=document.getElementById('streakBanner');
+  const icon=document.getElementById('streakIcon');
+  const val=document.getElementById('streakValue');
+  const sub=document.getElementById('streakSub');
+  const score=document.getElementById('streakScore');
+
+  if(!banner) return;
+
+  if(streak>=2){
+    banner.classList.add('has-streak');
+    icon.textContent='🔥';
+    val.innerHTML=`<span class="hl">${streak}-day streak</span>`;
+    sub.textContent=`${pct}% adherence over the last ${last28.length} days`;
+    score.textContent=`${pct}%`;
+  } else if(pct>=80){
+    banner.classList.add('has-streak');
+    icon.textContent='✨';
+    val.innerHTML=`<span class="hl">${pct}% this month</span> — great consistency`;
+    sub.textContent='Keep it up — consistency is everything';
+    score.textContent='';
+  } else if(last28.length===0){
+    icon.textContent='💊'; val.textContent='No history yet'; sub.textContent='Start tracking to see your adherence here'; score.textContent='';
+  } else {
+    icon.textContent='💊';
+    val.textContent=`${pct}% adherence`;
+    sub.textContent=`${taken28} of ${last28.length} doses taken`;
+    score.textContent='';
+    banner.classList.remove('has-streak');
+  }
+}
+
+// ── MED LIST (with structured fields) ──
+function renderMedList(){
+  const el=document.getElementById('medList');
+  if(!state.meds.length){el.innerHTML='<div class="med-empty">No medications yet — tap Edit to add some.</div>';return;}
+  el.innerHTML=state.meds.map(m=>{
+    const chips=[m.form,m.route,m.food,m.timing].filter(Boolean).map(c=>`<div class="med-info-chip">${esc(c)}</div>`).join('');
+    return `<div class="med-item">
+      <div class="med-icon">${m.icon||'💊'}</div>
+      <div class="med-info">
+        <div class="med-name">${esc(m.name)}</div>
+        ${m.dosage?`<div class="med-dosage">${esc(m.dosage)}</div>`:''}
+        ${chips?`<div class="med-info-chips">${chips}</div>`:''}
+        ${m.notes?`<div class="med-notes">${esc(m.notes)}</div>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── CAREGIVER MODE ──
+let carerPinBuffer='';
+
+function openCarerMode(){
+  if(!state.carerPin){
+    // No PIN set — go straight to view-only with message
+    activateCarerMode();
+    showToast('💡 Set a PIN in Settings to protect caregiver access','amber');
+    return;
+  }
+  carerPinBuffer='';
+  updateCarerPinDots();
+  document.getElementById('carerPinError').textContent='';
+  document.getElementById('carerPinTitle').textContent='Caregiver Access';
+  document.getElementById('carerPinSub').textContent='Enter your 4-digit PIN to switch to the read-only caregiver view.';
+  document.getElementById('carerPinSetupNote').textContent='';
+  document.getElementById('carerPinOverlay').style.display='flex';
+}
+
+function carerPinKey(val){
+  haptic('light');
+  if(val==='cancel'){ document.getElementById('carerPinOverlay').style.display='none'; return; }
+  if(val==='del'){ carerPinBuffer=carerPinBuffer.slice(0,-1); updateCarerPinDots(); return; }
+  if(carerPinBuffer.length>=4) return;
+  carerPinBuffer+=val;
+  updateCarerPinDots();
+  if(carerPinBuffer.length===4){
+    setTimeout(()=>{
+      if(!state.carerPin||carerPinBuffer===state.carerPin){
+        document.getElementById('carerPinOverlay').style.display='none';
+        activateCarerMode();
+      } else {
+        document.getElementById('carerPinError').textContent='Incorrect PIN. Try again.';
+        haptic('error');
+        carerPinBuffer='';
+        updateCarerPinDots();
+      }
+    },300);
+  }
+}
+
+function updateCarerPinDots(){
+  document.querySelectorAll('.carer-pin-dot').forEach((dot,i)=>{
+    dot.classList.toggle('filled', i<carerPinBuffer.length);
+  });
+}
+
+function activateCarerMode(){
+  document.body.classList.add('carer-mode');
+  document.getElementById('carerBanner').style.display='flex';
+  haptic('success');
+  showToast('👁 Caregiver View active — read only','green');
+}
+
+function exitCarerMode(){
+  document.body.classList.remove('carer-mode');
+  document.getElementById('carerBanner').style.display='none';
+  haptic('light');
+}
+
+// Haptics are called directly inside each action function (see confirmTake, undoTaken, takeSlot, undoSlot)
+
+function fmtMins(mins) {
+  const h = Math.floor(mins/60), m = mins%60;
+  if (h > 0 && m > 0) return `${h}h ${m}m`;
+  if (h > 0) return `${h}h`;
+  return `${m}m`;
+}
+
+// ── DAILY RESET (advanced) ──
+function checkAdvDailyReset() {
+  if (!state.advancedMode) return;
+  if (advState.lastResetDate !== todayStr()) {
+    archiveAdvDay();
+    advState.slots.forEach(sl => {
+      advState.today[sl.id] = {taken:false, takenAt:null, events:[]};
+    });
+    advState.lastResetDate = todayStr();
+    saveAdvState();
+    renderSlotGrid();
+    renderAdvHistory();
+  }
+}
+
+// ── UTILS ──
+function fmt12(t){const[h,m]=t.split(':').map(Number);return `${h%12||12}:${String(m).padStart(2,'0')} ${h>=12?'PM':'AM'}`;}
+function fmtTime(d){return d.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+let toastTimer;
+function showToast(msg,type='green'){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.className=`toast ${type} show`;
+  clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),3500);
+}
+
+function checkDailyReset(){
+  if(state.lastResetDate!==todayStr()){archiveDay();state.taken=false;state.takenAt=null;state.todayEvents=[];state.lastResetDate=todayStr();saveState();updateStatusOrb();renderHistory();}
+}
+
+function init(){
+  loadState();
+  loadAdvState();
+  applyTheme(state.theme||'dark');
+  applyMode();
+  checkOnboarding();
+  updateStatusOrb();renderMedList();renderHistory();
+  document.getElementById('notifTime').textContent=fmt12(state.reminderTime);
+  if(state.notifEnabled&&Notification.permission==='granted'){
+    document.getElementById('notifHint').style.display='none';
+    document.getElementById('notifMenuSub').textContent='Enabled ✓';
+    scheduleNotif();
+  }
+  updateClock();
+  setInterval(updateClock,1000);
+  setInterval(()=>{ checkDailyReset(); checkAdvDailyReset(); },60000);
+
+  // Register swipe-banner touch listeners now that DOM is ready
+  const b = document.getElementById('swipeBanner');
+  if(b){
+    b.addEventListener('touchstart', e => {
+      if(!b.classList.contains('show')) return;
+      bannerSwipeStartY = e.touches[0].clientY;
+      bannerCurrentY = 0;
+      b.classList.add('swiping');
+    }, { passive: true });
+    b.addEventListener('touchmove', e => {
+      if(!b.classList.contains('show')) return;
+      const dy = e.touches[0].clientY - bannerSwipeStartY;
+      if(dy < 0){
+        bannerCurrentY = dy;
+        b.style.transform = `translateY(${dy}px)`;
+        e.preventDefault();
+      }
+    }, { passive: false });
+    b.addEventListener('touchend', () => {
+      b.classList.remove('swiping');
+      if(bannerCurrentY < -40){ b.style.transform=''; dismissBanner(); }
+      else b.style.transform='';
+      bannerCurrentY = 0;
+    }, { passive: true });
+  }
+}
+init();
+</script>
+</body>
+</html>
